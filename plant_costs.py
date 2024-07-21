@@ -17,6 +17,7 @@ class PriceUnits(Enum):
     PerTonneOfProduct = 6
     PerKilogramOfCapacity = 7
     PerKiloWattOfCapacity = 8
+    PerMeterSquareOfSize = 9
 
 
 class PriceEntry:
@@ -167,6 +168,8 @@ def add_steel_plant_capex(system: System, prices: Dict[str, PriceEntry]):
         
         if price.units == PriceUnits.PerDevice:
             device.capex = price.price_usd
+        if price.units == PriceUnits.PerMeterSquareOfSize:
+            device.capex = price.price_usd * device.device_vars['size m2']
         if price.units == PriceUnits.PerTonneOfAnnualCapacity:
             device.capex = price.price_usd * system.annual_capacity
 

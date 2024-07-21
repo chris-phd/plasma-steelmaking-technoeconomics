@@ -42,9 +42,9 @@ def create_plasma_system(system_name: str = 'plasma steelmaking',
         if h2_storage_method is not None:
             h2_storage = Device('h2 storage', h2_storage_method)
             plasma_system.add_device(h2_storage)
-    h2_heat_exchanger = Device('h2 heat exchanger', 'gas heat exchanger')
+    h2_heat_exchanger = Device('h2 heat exchanger', 'high temp gas-gas heat exchanger')
     plasma_system.add_device(h2_heat_exchanger)
-    condenser = Device('condenser and scrubber', 'condenser and scrubber')
+    condenser = Device('condenser and scrubber', 'steam condenser and scrubber')
     plasma_system.add_device(condenser)
     ore_heater = Device('ore heater', 'ore heater')
     plasma_system.add_device(ore_heater)
@@ -119,6 +119,10 @@ def create_plasma_system(system_name: str = 'plasma steelmaking',
     plasma_system.add_output(condenser.name, create_dummy_mixture('carbon gas'))
     plasma_system.add_flow(h2_heat_exchanger.name, condenser.name, create_dummy_mixture('recycled h2 rich gas'))
 
+    # Add the condenser costs. Based on the cost of a steam condenser.
+    # U = 3000.0 W / m2 K, q_dot = 64 MW, T_lmtd = 132 K
+    condenser.device_vars['size m2'] = 161.1
+
     # join
     plasma_system.add_flow(condenser.name, join_1.name, create_dummy_mixture('recycled h2 rich gas'))
     if on_premises_h2_production:
@@ -134,6 +138,10 @@ def create_plasma_system(system_name: str = 'plasma steelmaking',
     plasma_system.add_flow(join_1.name, h2_heat_exchanger.name, create_dummy_mixture('h2 rich gas'))
     plasma_system.add_flow(plasma_smelter.name, h2_heat_exchanger.name, create_dummy_mixture('recycled h2 rich gas'))
     plasma_system.add_output(h2_heat_exchanger.name, EnergyFlow('losses'))
+    
+    # Add heat exchanger size. Based on values for the base case.
+    # U = 30 W / m2 K, q_dot = 100 MW, dT_lmtd = 200 K
+    h2_heat_exchanger.device_vars['size m2'] = 17000.0
 
     # ore heater
     plasma_system.add_input(ore_heater.name, create_dummy_mixture('ore'))
@@ -177,13 +185,13 @@ def create_dri_eaf_system(system_name='dri eaf steelmaking',
         if h2_storage_method is not None:
             h2_storage = Device('h2 storage', h2_storage_method)
             dri_eaf_system.add_device(h2_storage)
-    h2_heat_exchanger = Device('h2 heat exchanger', 'gas heat exchanger')
+    h2_heat_exchanger = Device('h2 heat exchanger', 'gas-gas heat exchanger')
     dri_eaf_system.add_device(h2_heat_exchanger)
     join_1 = Device('join 1')
     dri_eaf_system.add_device(join_1)
     h2_heater_2 = Device('h2 heater 2')
     dri_eaf_system.add_device(h2_heater_2)
-    condenser = Device('condenser and scrubber', 'condenser and scrubber')
+    condenser = Device('condenser and scrubber', 'steam condenser and scrubber')
     dri_eaf_system.add_device(condenser)
     ore_heater = Device('ore heater', 'ore heater')
     dri_eaf_system.add_device(ore_heater)
@@ -245,6 +253,10 @@ def create_dri_eaf_system(system_name='dri eaf steelmaking',
     dri_eaf_system.add_output(condenser.name, EnergyFlow('losses'))
     dri_eaf_system.add_flow(h2_heat_exchanger.name, condenser.name, create_dummy_mixture('recycled h2 rich gas'))
 
+    # Add the condenser costs. Based on the cost of a steam condenser.
+    # U = 3000.0 W / m2 K, q_dot = 64 MW, T_lmtd = 132 K
+    condenser.device_vars['size m2'] = 161.1
+
     # join
     dri_eaf_system.add_flow(condenser.name, join_1.name, create_dummy_mixture('recycled h2 rich gas'))
     if on_premises_h2_production:
@@ -260,6 +272,10 @@ def create_dri_eaf_system(system_name='dri eaf steelmaking',
     dri_eaf_system.add_flow(join_1.name, h2_heat_exchanger.name, create_dummy_mixture('h2 rich gas'))
     dri_eaf_system.add_flow(fluidized_bed_1.name, h2_heat_exchanger.name, create_dummy_mixture('recycled h2 rich gas'))
     dri_eaf_system.add_output(h2_heat_exchanger.name, EnergyFlow('losses'))
+
+    # Add heat exchanger size. Based on values for the base case.
+    # U = 30 W / m2 K, q_dot = 147 MW, dT_lmtd = 157 K
+    h2_heat_exchanger.device_vars['size m2'] = 31000.0
 
     # ore heater
     dri_eaf_system.add_input(ore_heater.name, create_dummy_mixture('ore'))
@@ -315,13 +331,13 @@ def create_hybrid_system(system_name='hybrid steelmaking',
         if h2_storage_method is not None:
             h2_storage = Device('h2 storage', h2_storage_method)
             hybrid_system.add_device(h2_storage)
-    h2_heat_exchanger_1 = Device('h2 heat exchanger 1','gas heat exchanger')
+    h2_heat_exchanger_1 = Device('h2 heat exchanger 1','gas-gas heat exchanger')
     hybrid_system.add_device(h2_heat_exchanger_1)
-    h2_heat_exchanger_2 = Device('h2 heat exchanger 2', 'gas heat exchanger')
+    h2_heat_exchanger_2 = Device('h2 heat exchanger 2', 'high temp gas-gas heat exchanger')
     hybrid_system.add_device(h2_heat_exchanger_2)
-    condenser_1 = Device('condenser and scrubber 1', 'condenser and scrubber')
+    condenser_1 = Device('condenser and scrubber 1', 'steam condenser and scrubber')
     hybrid_system.add_device(condenser_1)
-    condenser_2 = Device('condenser and scrubber 2', 'condenser and scrubber')
+    condenser_2 = Device('condenser and scrubber 2', 'steam condenser and scrubber')
     hybrid_system.add_device(condenser_2)
     ore_heater = Device('ore heater', 'ore heater')
     hybrid_system.add_device(ore_heater)
@@ -435,6 +451,11 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     hybrid_system.add_output(condenser_1.name, create_dummy_mixture('carbon gas'))
     hybrid_system.add_flow(h2_heat_exchanger_1.name, condenser_1.name, create_dummy_mixture('recycled h2 rich gas'))
 
+    # Add the condenser costs. Based on the cost of a steam condenser.
+    # U = 3000.0 W / m2 K, q_dot = 32 MW, T_lmtd = 132 K
+    condenser_1.device_vars['size m2'] = 80.8 
+    condenser_2.device_vars['size m2'] = 80.8 
+
     # heat exchanger 2
     hybrid_system.add_flow(join_2.name, h2_heat_exchanger_2.name, create_dummy_mixture('h2 rich gas'))
     hybrid_system.add_flow(plasma_smelter.name, h2_heat_exchanger_2.name, create_dummy_mixture('recycled h2 rich gas'))
@@ -444,6 +465,14 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     hybrid_system.add_flow(join_1.name, h2_heat_exchanger_1.name, create_dummy_mixture('h2 rich gas'))
     hybrid_system.add_flow(fluidized_bed_1.name, h2_heat_exchanger_1.name, create_dummy_mixture('recycled h2 rich gas'))
     hybrid_system.add_output(h2_heat_exchanger_1.name, EnergyFlow('losses'))
+
+    # Add heat exchanger sizes. Based on values for the base case for a pure plasma 
+    # and a pure HDR-EAF system, scaled by the desired pre-reduction degrere.
+    # U = 30 W / m2 K, q_dot = 147 MW, dT_lmtd = 157 K, at a maximum when pre-reduction degree is 100.0
+    h2_heat_exchanger_1.device_vars['size m2'] = 31000.0 * prereduction_perc * 0.01
+
+    # U = 30 W / m2 K, q_dot = 100 MW, dT_lmtd = 200 K, at a maximum when pre-reduction degree is 0.0
+    h2_heat_exchanger_2.device_vars['size m2'] = 17000.0 * (1 - prereduction_perc * 0.01)
 
     # ore heater
     hybrid_system.add_input(ore_heater.name, create_dummy_mixture('ore'))
