@@ -139,30 +139,30 @@ def solve_mass_energy_flow(system: System, mass_and_energy_func: Callable, print
             mass_and_energy_func(system_solved, print_debug_messages)
             converged = True
         except IncreaseExcessHydrogenPlasma:
-            system_vars_solved['plasma h2 excess ratio'] *= 1.05
+            system_vars_solved['plasma h2 excess ratio'] *= 1.01
             if print_debug_messages:
                 print(
                     f"System {system.name} did not converge. Increasing plasma excess h2 ratio to {system_vars_solved['plasma h2 excess ratio']}")
         except IncreaseExcessHydrogenFluidizedBeds:
-            system_vars_solved['fluidized beds h2 excess ratio'] *= 1.05
+            system_vars_solved['fluidized beds h2 excess ratio'] *= 1.01
             if print_debug_messages:
                 print(
                     f"System {system.name} did not converge. Increasing fluidized bed excess h2 ratio to {system_vars_solved['fluidized beds h2 excess ratio']}")
         except IncreaseCInHotMetal:
-            system_vars_solved['bof hot metal C perc'] *= 1.05
+            system_vars_solved['bof hot metal C perc'] *= 1.01
             if print_debug_messages:
                 print(
                     f"System {system.name} did not converge. Increasing hot metal C perc to {system_vars_solved['bof hot metal C perc']}")
         except DecreaseSiInHotMetal:
-            system_vars_solved['bof hot metal Si perc'] *= 0.95
+            system_vars_solved['bof hot metal Si perc'] *= 0.99
             if print_debug_messages:
                 print(
                     f"System {system.name} did not converge. Decreasing hot metal Si perc to {system_vars_solved['bof hot metal Si perc']}")
         except IncreaseInjectedO2:
             if not system_vars_solved['o2 injection kg']:
-                system_vars_solved['o2 injection kg'] = 0.1
+                system_vars_solved['o2 injection kg'] = 0.05
             else:
-                system_vars_solved['o2 injection kg'] *= 1.05
+                system_vars_solved['o2 injection kg'] *= 1.01
             if print_debug_messages:
                 print(
                     f"System {system.name} did not converge. Increasing injected o2 to {system_vars_solved['o2 injection kg']}")
