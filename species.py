@@ -81,11 +81,17 @@ class Species:
         self._moles = value
 
     @property
-    def mass(self):
+    def mass(self) -> float:
+        """
+        Returns the mass in kg
+        """
         return self._moles * self._mm
 
     @mass.setter
     def mass(self, value: float):
+        """
+        Sets the mass in kg
+        """
         if math.isclose(value + 1.0, 1.0):
             value = 0.0
         if value < 0.0:
@@ -190,6 +196,9 @@ class Mixture:
 
     @property
     def mass(self) -> float:
+        """
+        Returns the mass in kg
+        """
         mass = 0.0
         for species in self._species:
             mass += species.mass
