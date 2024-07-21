@@ -47,8 +47,7 @@ def add_steel_plant_lcop(system: System, prices: Dict[str, PriceEntry], print_de
     add_steel_plant_capex(system, prices)
 
     lcop_itemised = {
-        'capex': lcop_capex_only(system.capex(print_debug_messages), 
-                                 system.system_vars["annual fixed opex USD"],
+        'capex': lcop_capex_only(system.capex(print_debug_messages),
                                  system.annual_capacity * system.system_vars["capacity factor"], 
                                  system.lifetime_years)
     }
@@ -242,17 +241,16 @@ def cost_recovery_factor(years: float) -> float:
     return crf
 
 
-def lcop_capex_only(capex, annual_fixed_opex, annual_production, plant_lifetime_years):
-    return (cost_recovery_factor(plant_lifetime_years)*capex_direct_and_indirect(capex)
-            + annual_fixed_opex) / annual_production
+def lcop_capex_only(capex, annual_production, plant_lifetime_years):
+    return (cost_recovery_factor(plant_lifetime_years)*capex_direct_and_indirect(capex)) / annual_production
 
 
 def lcop_variable_opex_only(annual_operating_cost, annual_production):
     return annual_operating_cost / annual_production
 
 
-def lcop_total(capex, annual_fixed_opex, annual_variable_opex, annual_production, plant_lifetime_years):
+def lcop_total(capex, annual_operating_cost, annual_production, plant_lifetime_years):
     # levelised cost of production will depend on the capacity factor of the plant.
     # It is up to the caller of this function to account for that in the annual_production var.
-    return lcop_capex_only(capex, annual_fixed_opex, annual_production, plant_lifetime_years) + \
-           lcop_variable_opex_only(annual_variable_opex, annual_production)
+    return lcop_capex_only(capex, annual_production, plant_lifetime_years) + \
+           lcop_variable_opex_only(annual_operating_cost, annual_production)

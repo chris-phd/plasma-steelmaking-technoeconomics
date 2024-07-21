@@ -59,7 +59,6 @@ def create_plasma_system(system_name: str = 'plasma steelmaking',
         plasma_system.add_device(bof)
 
     # System variables defaults. Can be overwritten by user before mass and energy flows.
-    plasma_system.system_vars['annual fixed opex USD'] = 3.5e6
     plasma_system.system_vars['on premises h2 production'] = on_premises_h2_production
     plasma_system.system_vars['bof steelmaking'] = bof_steelmaking
     plasma_system.system_vars['cheap electricity hours'] = 8.0
@@ -203,7 +202,6 @@ def create_dri_eaf_system(system_name='dri eaf steelmaking',
     dri_eaf_system.add_device(eaf)
 
     # System variables defaults. Can be overwritten by user before mass and energy flows.
-    dri_eaf_system.system_vars['annual fixed opex USD'] = 3.5e6
     dri_eaf_system.system_vars['on premises h2 production'] = on_premises_h2_production
     dri_eaf_system.system_vars['cheap electricity hours'] = 8.0
     dri_eaf_system.system_vars['h2 storage hours of operation'] = 24.0 - dri_eaf_system.system_vars['cheap electricity hours']
@@ -364,7 +362,6 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     ironmaking_device_names = [fluidized_bed_1.name]
 
     # System variables defaults. Can be overwritten by user before mass and energy flows.
-    hybrid_system.system_vars['annual fixed opex USD'] = 3.5e6
     hybrid_system.system_vars['on premises h2 production'] = on_premises_h2_production
     hybrid_system.system_vars['bof steelmaking'] = bof_steelmaking
     hybrid_system.system_vars['cheap electricity hours'] = 8.0

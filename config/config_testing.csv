@@ -10,7 +10,6 @@ all,ore loi content weight perc,0.0,number
 all,use mgo slag weight perc,True,boolean
 all,electrolysis lhv efficiency percent,70,number
 all,slag mgo weight perc,7.0,number
-all,annual fixed opex USD,3.5e6,number
 plasma,plasma h2 excess ratio,1.0,number
 plasma bof,plasma h2 excess ratio,1.0,number
 all,plasma h2 excess ratio,1.0,number
