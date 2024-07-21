@@ -842,8 +842,7 @@ def add_fluidized_bed_flows(system: System):
     off_gas.temp_kelvin = minimum_off_gas_temp
     ironmaking_device.first_output_containing_name('h2 rich gas').set(off_gas)
 
-    # Convection and conduction losses are 4% of input heat. 
-    # TODO! Find a better justification for this 4%. Currently reusing the EAF loss recommended 
+    # Convection and conduction losses are 4% of input heat. EAF loss recommended 
     # by Sujay Kumar Dutta pg 425
     thermal_losses_frac = 0.04
 
@@ -902,11 +901,6 @@ def steel_surface_radiation_losses(area, temp_steel, temp_surroundings, capacity
 
 
 def add_eaf_flows_final(system: System):
-    # TODO: May be underestimating he energy requirement for the EAF. 
-    # According to Sujay Kumar Dutta, it should be around 825 kWh / tonne steel. 
-    # and Vogl2018 recommends 667 kWh / tonne steel. 
-    # 0.56 * 704 kWh / tonne recommended by hornby2021. 
-    # We are only getting 455 kWh / tonne steel. Seems to be due to us keeping the hbi hot
     steelmaking_device_name = system.system_vars['steelmaking device name']
     steelmaking_device = system.devices[steelmaking_device_name]
     steel_bath_temp_k = system.system_vars['steel exit temp K']
@@ -1022,8 +1016,7 @@ def add_plasma_flows_final(system: System):
     and reuse between Hybrid and Plasma.
     """
     # reduction_degree: The degree of reduction achieved by the hydrogen plasma. Based on the mass of oxygen 
-    # remaining in iron oxide, compared to the mass of oxygen in the iron oxide at the very start of the process.
-    # TODO: Fix this. Reduction degree is based on the mass of the oxygen in unreduced hematite. 
+    # remaining in iron oxide, compared to the mass of oxygen in the hematite at the very start of the process.
     reduction_degree = system.system_vars['plasma reduction percent'] * 0.01
     plasma_temp = system.system_vars['plasma temp K']
     excess_h2_ratio = system.system_vars['plasma h2 excess ratio']
@@ -1700,16 +1693,11 @@ def add_bof_flows(system: System):
 
     bof.inputs['steel'].set(hot_metal)
 
-    # TODO! pick up from here tomorrow.
-    # add the heat energy from the oxidation reactions. Need to ensure
-    # there is enough heat generated to heat the input flux etc.
-    # any waste heat can be given off as losses...
-
     # Add the energy from the oxidation reactions
     reaction_temp = hot_metal.temp_kelvin
     chemical_energy = -species.delta_h_2c_o2_2co(reaction_temp) * co_emitted.moles * 0.5 \
-                      - species.delta_h_2fe_o2_2feo(reaction_temp) * feo_slag.moles * 0.5 \
-                      - species.delta_h_si_o2_sio2(reaction_temp) * sio2_slag.moles
+                      -species.delta_h_2fe_o2_2feo(reaction_temp) * feo_slag.moles * 0.5 \
+                      -species.delta_h_si_o2_sio2(reaction_temp) * sio2_slag.moles
 
     bof.inputs['chemical'].energy = chemical_energy
 
