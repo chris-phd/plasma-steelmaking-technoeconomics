@@ -6,6 +6,7 @@ This project is a technoeconomic assessment of four different low-emission steel
 @article{cooper2024technoeconomic,
   title={Technoeconomic analysis of low-emission steelmaking using hydrogen thermal plasma},
   author={Cooper, Christopher and Brooks, Geoffrey and Rhamdhani, M. Akbar and Pye, John and Rahbari, Alireza}
+}
 ```
 
 ## Install
