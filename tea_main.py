@@ -97,7 +97,7 @@ def main():
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description='perform the technoeconomic analysis on hydrogen plasma based low emission steel plants and calculates the levelised cost of liquid steel.')
+    parser = argparse.ArgumentParser(description='Technoeconomic assessment of low-emission steelmaking using hydrogen plasma.')
     parser.add_argument('-p', '--price_file', help='path to the csv file containing capex and commondity prices.', required=False, default='prices_default.csv')
     parser.add_argument('-c', '--config_file', help='path to the csv file containing the system configuration.', required=False, default='config_default.csv')
     parser.add_argument('-r', '--render_dir', help='path to directory to render the steelplant system diagrams.', required=False, default=None)
