@@ -782,8 +782,8 @@ def add_fluidized_bed_flows(system: System):
     # is more efficient has a major impact on the cost of the process. A tighter range
     # means more H2 is required to maintain the tight energy balance.
     reaction_temp = celsius_to_kelvin(650)
-    in_gas_temp = reaction_temp + temp_range * 0.25
-    minimum_off_gas_temp = reaction_temp - temp_range * 0.75
+    in_gas_temp = reaction_temp + temp_range * 0.5
+    minimum_off_gas_temp = reaction_temp - temp_range * 0.5
 
     ironmaking_device = system.devices[ironmaking_device_names[0]]
     ore = ironmaking_device.inputs['ore']
