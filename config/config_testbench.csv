@@ -11,11 +11,8 @@ all,use mgo slag weight perc,True,boolean
 all,electrolysis lhv efficiency percent,70,number
 all,slag mgo weight perc,7.0,number
 plasma,plasma reduction percent,70.0,number
-plasma,plasma h2 excess ratio,2.0,number
-plasma ar-h2,plasma h2 excess ratio,2.0,number
-plasma ar-h2,argon molar percent in h2 plasma,10,number
-plasma bof,plasma h2 excess ratio,2.0,number
-hybrid 33,plasma h2 excess ratio,4.0,number
-hybrid 33 ar-h2,argon molar percent in h2 plasma,10,number
-hybrid 55,plasma h2 excess ratio,5.5,number
-hybrid 90,plasma h2 excess ratio,30.0,number
+plasma,plasma h2 excess ratio,2.3,number
+plasma bof,plasma h2 excess ratio,2.3,number
+hybrid 33,plasma h2 excess ratio,2.3,number
+dri-eaf,fluidized beds h2 excess ratio,3.84,number
+hybrid 33,fluidized beds h2 excess ratio,3.84,number

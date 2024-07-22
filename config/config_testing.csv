@@ -10,8 +10,8 @@ all,ore loi content weight perc,0.0,number
 all,use mgo slag weight perc,True,boolean
 all,electrolysis lhv efficiency percent,70,number
 all,slag mgo weight perc,7.0,number
-plasma,plasma h2 excess ratio,1.0,number
-plasma bof,plasma h2 excess ratio,1.0,number
-all,plasma h2 excess ratio,1.0,number
-dri-eaf,fluidized beds h2 excess ratio,1.0,number
-all,fluidized beds h2 excess ratio,1.0,number
+plasma,plasma h2 excess ratio,2.3,number
+plasma bof,plasma h2 excess ratio,2.3,number
+hybrid 33,plasma h2 excess ratio,2.3,number
+dri-eaf,fluidized beds h2 excess ratio,3.84,number
+hybrid 33,fluidized beds h2 excess ratio,3.84,number
