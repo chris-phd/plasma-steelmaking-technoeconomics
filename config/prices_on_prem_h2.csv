@@ -1,6 +1,6 @@
 device or commodity name,price in 2023 usd,cost unit enum,sensitivity +/- %,Description
 Scrap,250.00,PerTonne,5,
-Ore,100.00,PerTonne,5,
+Ore,85.72,PerTonne,5,
 CaO,0.08,PerKilogram,5,
 MgO,1.02,PerKilogram,5,
 H2,3.00,PerKilogram,5,

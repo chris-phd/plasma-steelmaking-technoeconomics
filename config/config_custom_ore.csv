@@ -1,0 +1,2 @@
+system name,variable name,variable value,variable type,comment
+all,ore name,config/custom_ore_complex.csv,string,"This is the relative path to the ore.csv file. May need to change this when running on windows."

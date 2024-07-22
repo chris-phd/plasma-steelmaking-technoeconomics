@@ -59,6 +59,7 @@ def create_plasma_system(system_name: str = 'plasma steelmaking',
         plasma_system.add_device(bof)
 
     # System variables defaults. Can be overwritten by user before mass and energy flows.
+    plasma_system.system_vars['capacity factor'] = 0.9
     plasma_system.system_vars['on premises h2 production'] = on_premises_h2_production
     plasma_system.system_vars['bof steelmaking'] = bof_steelmaking
     plasma_system.system_vars['cheap electricity hours'] = 8.0
@@ -67,7 +68,7 @@ def create_plasma_system(system_name: str = 'plasma steelmaking',
     plasma_system.system_vars['plasma temp K'] = 2750
     plasma_system.system_vars['argon molar percent in h2 plasma'] = 0.0
     plasma_system.system_vars['plasma reduction percent'] = 95.0
-    plasma_system.system_vars['plasma h2 excess ratio'] = 1.5
+    plasma_system.system_vars['plasma h2 excess ratio'] = 2.3
     plasma_system.system_vars['o2 injection kg'] = 0.0
     plasma_system.system_vars['plasma torch electro-thermal eff percent'] = 80.0  # MacRae1992
     plasma_system.system_vars['plasma reactor thermal eff percent'] = 65.0  # badr2007, fig 21,
@@ -75,7 +76,8 @@ def create_plasma_system(system_name: str = 'plasma steelmaking',
     plasma_system.system_vars['steelmaking bath temp K'] = plasma_system.system_vars['steel exit temp K']
     plasma_system.system_vars['b2 basicity'] = 2.0
     plasma_system.system_vars['b4 basicity'] = 1.8  # 2.1
-    plasma_system.system_vars['slag mgo weight perc'] = 7.0  # Check what we expect in an EAF
+    plasma_system.system_vars['use mgo slag weight perc'] = True
+    plasma_system.system_vars['slag mgo weight perc'] = 7.0
     plasma_system.system_vars['ore heater device name'] = ore_heater.name
     plasma_system.system_vars['ore heater temp K'] = celsius_to_kelvin(1450)
     plasma_system.system_vars['ironmaking device names'] = [plasma_smelter.name]
@@ -202,6 +204,7 @@ def create_dri_eaf_system(system_name='dri eaf steelmaking',
     dri_eaf_system.add_device(eaf)
 
     # System variables defaults. Can be overwritten by user before mass and energy flows.
+    dri_eaf_system.system_vars['capacity factor'] = 0.9
     dri_eaf_system.system_vars['on premises h2 production'] = on_premises_h2_production
     dri_eaf_system.system_vars['cheap electricity hours'] = 8.0
     dri_eaf_system.system_vars['h2 storage hours of operation'] = 24.0 - dri_eaf_system.system_vars['cheap electricity hours']
@@ -212,6 +215,7 @@ def create_dri_eaf_system(system_name='dri eaf steelmaking',
     dri_eaf_system.system_vars['steel exit temp K'] = celsius_to_kelvin(1600)
     dri_eaf_system.system_vars['b2 basicity'] = 2.0
     dri_eaf_system.system_vars['b4 basicity'] = 1.8
+    dri_eaf_system.system_vars['use mgo slag weight perc'] = True
     dri_eaf_system.system_vars['slag mgo weight perc'] = 7.0
     dri_eaf_system.system_vars['ore heater device name'] = ore_heater.name
     dri_eaf_system.system_vars['ore heater temp K'] = celsius_to_kelvin(550)
@@ -362,6 +366,7 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     ironmaking_device_names = [fluidized_bed_1.name]
 
     # System variables defaults. Can be overwritten by user before mass and energy flows.
+    hybrid_system.system_vars['capacity factor'] = 0.9
     hybrid_system.system_vars['on premises h2 production'] = on_premises_h2_production
     hybrid_system.system_vars['bof steelmaking'] = bof_steelmaking
     hybrid_system.system_vars['cheap electricity hours'] = 8.0
@@ -375,11 +380,12 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     hybrid_system.system_vars['plasma reactor thermal eff percent'] = 65.0  # badr2007, fig 21,
     hybrid_system.system_vars['steel exit temp K'] = celsius_to_kelvin(1600)
     hybrid_system.system_vars['o2 injection kg'] = 0.0
-    hybrid_system.system_vars['plasma h2 excess ratio'] = 1.5
+    hybrid_system.system_vars['plasma h2 excess ratio'] = 2.3
     hybrid_system.system_vars['steelmaking bath temp K'] = hybrid_system.system_vars['steel exit temp K']
     hybrid_system.system_vars['b2 basicity'] = 2.0
     hybrid_system.system_vars['b4 basicity'] = 1.8  # 2.1
-    hybrid_system.system_vars['slag mgo weight perc'] = 7.0  # Check what we expect in an EAF
+    hybrid_system.system_vars['use mgo slag weight perc'] = True
+    hybrid_system.system_vars['slag mgo weight perc'] = 7.0
     hybrid_system.system_vars['ore heater device name'] = ore_heater.name
     hybrid_system.system_vars['ore heater temp K'] = celsius_to_kelvin(550)
     hybrid_system.system_vars['ironmaking device names'] = ironmaking_device_names
