@@ -5,6 +5,7 @@ import copy
 import datetime
 import csv
 import os
+import tempfile
 from typing import List, Dict, Any, Optional
 import matplotlib.pyplot as plt
 import shutil
@@ -53,7 +54,8 @@ def main():
 
     ## Sensitivity Analysis
     if run_sensitivity_analysis:
-        output_dir = f"/tmp/TEA_SA_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}/"
+        tmp_dir = tempfile.gettempdir()
+        output_dir = os.path.join(tmp_dir, f"TEA_SA_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
         os.makedirs(output_dir)
         generate_lcop_report(systems, output_dir, args.config_file, args.price_file, args.sensitivity_file)
         

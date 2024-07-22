@@ -4,6 +4,7 @@ import copy
 import csv
 from enum import Enum
 import numpy as np 
+import os
 from typing import Dict, List, Optional, Callable
 
 from mass_energy_flow import solve_mass_energy_flow
@@ -100,7 +101,7 @@ class SensitivityIndicator:
 def report_sensitivity_analysis_for_system(output_dir: str, system: System,
                                            sensitivity_indicators: List[SensitivityIndicator]):
     system_name_sanitised = system.name.replace(' ', '_')
-    output_filename = output_dir + system_name_sanitised + ".csv"
+    output_filename = os.path.join(output_dir, system_name_sanitised + ".csv")
     with open(output_filename, 'w') as file:
         file.write(system.name + "\n\n")
         file.write("parameter_name,indicator_name,sensitivity index param 1,sensitivity index param 2,\
