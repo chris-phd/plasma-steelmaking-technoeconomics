@@ -64,7 +64,7 @@ A config.csv file and a prices.csv file must be supplied to run the technoeconom
 
 To use custom capex or commodity prices, overwrite values in config/prices_default.csv or create a new prices.csv. For example, to increase the price of hydrogen to 5.00 USD/kg, modify the hydrogen entry to read:
 ```
-H2,3.00,PerKilogram,5,
+H2,5.00,PerKilogram,5,
 ```
 
 The config.csv file manages all non-price settings, such as efficiency, slag basicity, ore composition, the use of on-premesis hydrogen generation and so on. The full list of available settings can be found in create_plants.py. 
