@@ -829,11 +829,19 @@ def add_fluidized_bed_flows(system: System):
     except KeyError:
         pass  # no LOI species in the ore
 
-    h2_excess = copy.copy(h2_consumed)
-    h2_excess.moles = (excess_h2_ratio - 1) * h2_consumed.moles
+    steelmaking_device = system.devices[system.system_vars['steelmaking device name']]
+    steel = steelmaking_device.outputs['steel'] 
+    slag = steelmaking_device.outputs['slag']
 
+    # stoichiometric amount for entire reduction, even if only partial reduction occurs here.
+    # needed to garatee correct gas oxidation degree is achieved.
+    stoichiometric_h2_moles = 1.5 * steel.species('Fe').moles + 0.5 * slag.species('FeO').moles
     h2_total = species.create_h2_species()
-    h2_total.moles = h2_consumed.moles + h2_excess.moles
+    assert excess_h2_ratio >= 1
+    h2_total.moles = stoichiometric_h2_moles * excess_h2_ratio
+
+    h2_excess = species.create_h2_species()
+    h2_excess.moles = h2_total.moles - h2_consumed.moles
 
     hydrogen = species.Mixture('H2', [h2_total])
     hydrogen.temp_kelvin = in_gas_temp
@@ -1102,12 +1110,15 @@ def add_plasma_flows_final(system: System):
     h2o.moles = num_fe_formations + num_feo_formations + num_fe3o4_formations + 2 * num_si_formations
     h2_consumed_moles = h2o.moles
 
-    h2_excess = species.create_h2_species()
-    assert excess_h2_ratio >= 1
-    h2_excess.moles = h2_consumed_moles * (excess_h2_ratio - 1)
-
+    # stoichiometric amount for entire reduction. h2 moles used in fluidised bed prereduction included.
+    # needed to garantee the correct gas oxidation degree is achieved.
+    stoichiometric_h2_moles = fe_target.moles * 1.5 + 0.5 * feo_target.moles 
     h2_total = species.create_h2_species()
-    h2_total.moles = h2_consumed_moles + h2_excess.moles
+    assert excess_h2_ratio >= 1
+    h2_total.moles = stoichiometric_h2_moles * excess_h2_ratio
+
+    h2_excess = species.create_h2_species()
+    h2_excess.moles = h2_total.moles - h2_consumed_moles
 
     # calculate argon in the plasma
     hydrogen_frac_in_plasma = 1.0 - 0.01 * argon_perc_in_plasma
