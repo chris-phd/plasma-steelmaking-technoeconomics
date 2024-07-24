@@ -242,6 +242,7 @@ def add_hybrid_mass_and_energy(system: System, print_debug_messages: bool = True
     add_ore(system)
     add_fluidized_bed_flows(system)
     add_briquetting_flows(system)
+    add_plasma_ore_heater_flows(system)
     add_plasma_flows_final(system)
     if system.system_vars.get('on premises h2 production', True):
         add_electrolysis_flows(system)
@@ -661,10 +662,12 @@ def add_ore(system: System):
     of the output slag / steel and the ore composition.
     """
     ore_initial_temp = celsius_to_kelvin(25)
-    ore_preheating_temp = system.system_vars['ore heater temp K']
+    ore_preheating_temp = system.system_vars.get('ore heater temp K')  # dri-eaf and hybrid systems
+    if ore_preheating_temp is None:
+        ore_preheating_temp = system.system_vars.get('plasma ore heater temp K')
     steelmaking_device_name = system.system_vars['steelmaking device name']
     ore_composition_simple = system.system_vars['ore composition simple']
-    ore_heater_device_name = system.system_vars['ore heater device name']
+    ore_heater_device_name = system.system_vars['first ore heater device name']
 
     # Calculate the mass of the ore required.
     # Note that this is the input ore at the very start of the process.     
@@ -723,7 +726,7 @@ def add_ore(system: System):
         ore_preheating_device.outputs['ore'].set(ore)
 
         # Add electrical energy to heat the ore
-        electrical_heat_eff = 0.98
+        electrical_heat_eff = 0.95
         electrical_energy = EnergyFlow('base electricity', ore_preheating_device.energy_balance() / electrical_heat_eff)
         ore_preheating_device.inputs['base electricity'].set(electrical_energy)
         electrical_losses = EnergyFlow('losses', electrical_energy.energy * (1 - electrical_heat_eff))
@@ -873,8 +876,7 @@ def add_fluidized_bed_flows(system: System):
 
 def add_briquetting_flows(system: System):
     """
-    Basically a dummy stage. Since for the moment we don't assume any
-    heating takes place. 
+    Basically a dummy stage. Since for the moment DRI and HBI are effectivly the same
     """
     if 'briquetting' not in system.devices:
         return
@@ -882,6 +884,26 @@ def add_briquetting_flows(system: System):
     hbi = copy.copy(system.devices[final_ironmaking_device_name].outputs['dri'])
     hbi.name = 'hbi'
     system.devices['briquetting'].outputs['hbi'].set(hbi)
+
+
+def add_plasma_ore_heater_flows(system: System):
+    if 'plasma ore heater device name' not in system.system_vars:
+        raise KeyError(f'No plasma ore heater device name in system vars for {system.name}')
+    ore_heater = system.devices[system.system_vars['plasma ore heater device name']]
+    ore_heater_temp_k = system.system_vars['plasma ore heater temp K']
+    
+    hbi_ore_out = ore_heater.inputs.get('hbi')
+    if ore_heater is None:
+        hbi_ore_out = ore_heater.inputs.get('ore')
+
+    ore_heater.outputs[hbi_ore_out.name].set(hbi_ore_out)
+    ore_heater.outputs[hbi_ore_out.name].temp_kelvin = ore_heater_temp_k
+
+    electrical_heat_eff = 0.95
+    electrical_energy = EnergyFlow('base electricity', ore_heater.energy_balance() / electrical_heat_eff)
+    ore_heater.inputs['base electricity'].set(electrical_energy)
+    electrical_losses = EnergyFlow('losses', electrical_energy.energy * (1 - electrical_heat_eff))
+    ore_heater.outputs['losses'].set(electrical_losses)
 
 
 def steel_surface_radiation_losses(area, temp_steel, temp_surroundings, capacity_tonnes: float = 180.0,

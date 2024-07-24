@@ -78,8 +78,8 @@ def create_plasma_system(system_name: str = 'plasma steelmaking',
     plasma_system.system_vars['b4 basicity'] = 1.8  # 2.1
     plasma_system.system_vars['use mgo slag weight perc'] = True
     plasma_system.system_vars['slag mgo weight perc'] = 7.0
-    plasma_system.system_vars['ore heater device name'] = ore_heater.name
-    plasma_system.system_vars['ore heater temp K'] = celsius_to_kelvin(1450)
+    plasma_system.system_vars['first ore heater device name'] = ore_heater.name
+    plasma_system.system_vars['plasma ore heater temp K'] = celsius_to_kelvin(800)
     plasma_system.system_vars['ironmaking device names'] = [plasma_smelter.name]
     plasma_system.system_vars['electrolysis lhv efficiency percent'] = 70.0
     plasma_system.system_vars['hydrogen loops'] = [plasma_system.system_vars['ironmaking device names']]
@@ -217,7 +217,7 @@ def create_dri_eaf_system(system_name='dri eaf steelmaking',
     dri_eaf_system.system_vars['b4 basicity'] = 1.8
     dri_eaf_system.system_vars['use mgo slag weight perc'] = True
     dri_eaf_system.system_vars['slag mgo weight perc'] = 7.0
-    dri_eaf_system.system_vars['ore heater device name'] = ore_heater.name
+    dri_eaf_system.system_vars['first ore heater device name'] = ore_heater.name
     dri_eaf_system.system_vars['ore heater temp K'] = celsius_to_kelvin(550)
     dri_eaf_system.system_vars['ironmaking device names'] = [fluidized_bed_1.name]
     dri_eaf_system.system_vars['fluidized beds h2 excess ratio'] = 3.84
@@ -349,6 +349,8 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     hybrid_system.add_device(fluidized_bed_1)
     briquetting = Device('briquetting')
     hybrid_system.add_device(briquetting)
+    ore_heater_2 = Device('ore heater 2', 'ore heater')
+    hybrid_system.add_device(ore_heater_2)
     plasma_torch = Device('plasma torch')
     hybrid_system.add_device(plasma_torch)
     plasma_smelter = Device('plasma smelter', 'plasma smelter')
@@ -386,8 +388,10 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     hybrid_system.system_vars['b4 basicity'] = 1.8  # 2.1
     hybrid_system.system_vars['use mgo slag weight perc'] = True
     hybrid_system.system_vars['slag mgo weight perc'] = 7.0
-    hybrid_system.system_vars['ore heater device name'] = ore_heater.name
+    hybrid_system.system_vars['first ore heater device name'] = ore_heater.name
+    hybrid_system.system_vars['plasma ore heater device name'] = ore_heater_2.name
     hybrid_system.system_vars['ore heater temp K'] = celsius_to_kelvin(550)
+    hybrid_system.system_vars['plasma ore heater temp K'] = celsius_to_kelvin(800)
     hybrid_system.system_vars['ironmaking device names'] = ironmaking_device_names
     hybrid_system.system_vars['fluidized beds h2 excess ratio'] = 3.84
     hybrid_system.system_vars['electrolysis lhv efficiency percent'] = 70.0
@@ -497,13 +501,18 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     # briquetting
     hybrid_system.add_flow(ironmaking_device_names[-1], briquetting.name, create_dummy_mixture('dri'))
 
+    # ore heater 2
+    hybrid_system.add_flow(briquetting.name, ore_heater_2.name, create_dummy_mixture('hbi'))
+    hybrid_system.add_input(ore_heater_2.name, EnergyFlow('base electricity'))
+    hybrid_system.add_output(ore_heater_2.name, EnergyFlow('losses'))
+    
     # plasma torch
     hybrid_system.add_flow(h2_heat_exchanger_2.name, plasma_torch.name, create_dummy_mixture('h2 rich gas'))
     hybrid_system.add_input(plasma_torch.name, EnergyFlow('base electricity'))
     hybrid_system.add_output(plasma_torch.name, EnergyFlow('losses'))
 
     # plasma smelter
-    hybrid_system.add_flow(briquetting.name, plasma_smelter.name, create_dummy_mixture('hbi'))
+    hybrid_system.add_flow(ore_heater_2.name, plasma_smelter.name, create_dummy_mixture('hbi'))
     hybrid_system.add_flow(plasma_torch.name, plasma_smelter.name, create_dummy_mixture('plasma h2 rich gas'))
     hybrid_system.add_input(plasma_smelter.name, EnergyFlow('chemical'))
     hybrid_system.add_output(plasma_smelter.name, EnergyFlow('losses'))
