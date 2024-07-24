@@ -1117,9 +1117,11 @@ def add_plasma_flows_final(system: System):
     plasma_torch.inputs['base electricity'].energy = electrical_energy
     plasma_torch.outputs['losses'].energy = electrical_energy * (1 - plasma_torch_eff)
 
-    # Add the efficiency due to heat loss to reactor walls (mainly by radiation)
+    # Add the efficiency due to heat loss to reactor walls (mainly by radiation and 
+    # underinsulation of the reactor)
     reactor_thermal_eff = system.system_vars['plasma reactor thermal eff percent'] * 0.01
-    reactor_thermal_eff_losses = electrical_energy * plasma_torch_eff * (1 - reactor_thermal_eff)
+    plasma_dh_compared_to_room_temp = abs(h2_plasma_after_torch.delta_h(300.0))
+    reactor_thermal_eff_losses = plasma_dh_compared_to_room_temp * (1 - reactor_thermal_eff)
     plasma_smelter.outputs['losses'].energy = reactor_thermal_eff_losses
 
     # Add the carbon required for the alloy
