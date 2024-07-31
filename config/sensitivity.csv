@@ -1,2 +1,2 @@
 system name,parameter name,parameter type,X max, X min,num increments,elasticity perc
-Plasma,plasma reactor thermal eff percent,SystemVar,80.0,80.5,41,3
+Plasma BOF,plasma reactor thermal eff percent,SystemVar,90.0,70.0,41,5

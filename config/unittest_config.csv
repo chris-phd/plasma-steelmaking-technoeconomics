@@ -5,3 +5,5 @@ all,on premises h2 production,False,boolean
 all,ore name,Fe content,string
 all,ore fe content weight perc,59.0,number
 all,ore loi content weight perc,0.0,number
+plasma,plasma reactor thermal eff percent,70.0,number
+dri-eaf,fluidized beds reduction percent,93.0,number

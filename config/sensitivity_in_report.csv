@@ -1,7 +1,7 @@
 system name,parameter name,parameter type,X max, X min,num increments,elasticity perc
 All,H2,Price,6.0,2.0,3,3
 All,Base Electricity,Price,139.65,46.55,3,3
-All,plasma reactor thermal eff percent,SystemVar,95.0,60.0,3,5
+All,plasma reactor thermal eff percent,SystemVar,95.0,65.0,3,5
 All,plasma torch electro-thermal eff percent,SystemVar,95.0,60.0,3,5
 All,b2 basicity,SystemVar,3.0,1.0,3,5
 All,max heat exchanger temp K,SystemVar,1700.00,1273.15,3,3
