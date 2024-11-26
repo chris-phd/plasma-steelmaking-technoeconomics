@@ -1736,12 +1736,23 @@ def add_bof_flows(system: System):
 
     bof.inputs['chemical'].energy = chemical_energy
 
+    # Add the radiation losses from steel bath
+    steel_bath_temp_k = steel.temp_kelvin
+    bof_surface_radius = 3.8
+    capacity_tonnes = 180
+    tap_to_tap_secs = 60 * 50
+    radiation_losses = steel_surface_radiation_losses(np.pi * bof_surface_radius ** 2, steel_bath_temp_k,
+                                                      celsius_to_kelvin(25), capacity_tonnes, tap_to_tap_secs)
+    bof.outputs['losses'].energy = radiation_losses
+
     if bof.energy_balance() > 0:
         raise IncreaseCInHotMetal(
             "Error: Not enough energy from the oxidation reactions to heat the input flux and scrap")
 
-    # All extra energy is set as losses
-    bof.outputs['losses'].energy = -bof.energy_balance()
+    # All extra energy is set as losses to avoid overheating the furnace. 
+    # This includes convective and conductive thermal losses not already 
+    # accounted by the radiation from the steel bath
+    bof.outputs['losses'].energy += -bof.energy_balance()
 
 
 # Plot Helpers
