@@ -201,6 +201,7 @@ def create_dri_eaf_system(system_name='dri eaf steelmaking',
     h2_heater_1 = Device('h2 heater 1')
     dri_eaf_system.add_device(h2_heater_1)
     fluidized_bed_2 = Device('fluidized bed 2', 'fluidized bed')
+    fluidized_bed_2.capex_label = None  # Capex of all the fluidized beds already captured by fluidized bed 1
     dri_eaf_system.add_device(fluidized_bed_2)
     briquetting = Device('briquetting','briquetting')
     dri_eaf_system.add_device(briquetting)
