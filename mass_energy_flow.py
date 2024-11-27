@@ -212,7 +212,7 @@ def add_dri_eaf_mass_and_energy(system: System, print_debug_messages: bool = Tru
     add_steel_out(system)
     add_eaf_flows_initial(system)
     add_ore(system)
-    add_fluidized_bed_flows(system)
+    add_two_cascaded_fluidized_bed_flows(system)
     add_briquetting_flows(system)
     add_eaf_flows_final(system)
     if system.system_vars.get('on premises h2 production', True):
@@ -772,6 +772,177 @@ def iron_species_from_reduction_degree(reduction_degree: float, initial_ore_mass
     return fe, feo, fe3o4, fe2o3
 
 
+def add_two_cascaded_fluidized_bed_flows(system: System):
+    """
+    Uses a two cascaded fluidized bed to achieve high reduction degree and reduce the amount
+    of hydrogen that is needed as a carrier of thermal energy. Only used in the DRI-EAF process.
+    """
+    ironmaking_device_names = system.system_vars['ironmaking device names']
+    excess_h2_ratio = system.system_vars['fluidized beds h2 excess ratio']
+    reduction_degree = system.system_vars['fluidized beds reduction percent'] * 0.01
+    temp_range = system.system_vars['fluidized beds temp range']
+    reduction_degree_in_first_fluidized_bed = 0.65
+
+    assert len(ironmaking_device_names) > 0, 'Must have at least one iron making device'
+    assert excess_h2_ratio >= 1.0
+    assert reduction_degree > reduction_degree_in_first_fluidized_bed
+
+    ironmaking_device_fb1 = system.devices[ironmaking_device_names[0]]
+    ore = ironmaking_device_fb1.inputs['ore']
+
+    reaction_temp = celsius_to_kelvin(650)
+    in_gas_temp_fb1 = reaction_temp + temp_range * 0.5
+    in_gas_temp_fb2 = in_gas_temp_fb1
+    minimum_off_gas_temp_fb1 = ore.temp_kelvin
+    minimum_off_gas_temp_fb2 = reaction_temp
+
+    # Composition of the partial DRI after the first fluidized bed
+    hematite_composition = system.system_vars['ore composition simple LOI removed']
+    fe_partial_dri, feo_partial_dri, fe3o4_partial_dri, fe2o3_partial_dri = iron_species_from_reduction_degree(reduction_degree_in_first_fluidized_bed, ore.mass,
+                                                                               hematite_composition)
+
+    partial_dri = species.Mixture('partial dri fines', [fe_partial_dri, feo_partial_dri, fe3o4_partial_dri, fe2o3_partial_dri,
+                                                    copy.copy(ore.species('CaO')),
+                                                    copy.copy(ore.species('MgO')),
+                                                    copy.copy(ore.species('SiO2')),
+                                                    copy.copy(ore.species('Al2O3')),
+                                                    copy.copy(ore.species('TiO2'))])
+    partial_dri.temp_kelvin = reaction_temp
+    ironmaking_device_fb1.outputs['dri'].set(partial_dri)
+
+    # TODO: Reduce repetition with the same logic in the plasma smelter.
+    delta_fe = fe_partial_dri.moles - ore.species('Fe').moles
+    delta_feo = feo_partial_dri.moles - ore.species('FeO').moles
+    delta_fe3o4 = fe3o4_partial_dri.moles - ore.species('Fe3O4').moles
+
+    num_fe_formations = delta_fe
+    num_feo_formations = (num_fe_formations + delta_feo) / 3
+    num_fe3o4_formations = (num_feo_formations + delta_fe3o4) / 2
+
+    chemical_energy = EnergyFlow('chemical energy', - num_fe_formations * species.delta_h_feo_h2_fe_h2o(reaction_temp)
+                                 - num_feo_formations * species.delta_h_fe3o4_h2_3feo_h2o(reaction_temp)
+                                 - num_fe3o4_formations * species.delta_h_3fe2o3_h2_2fe3o4_h2o(reaction_temp))
+    ironmaking_device_fb1.inputs['chemical'].set(chemical_energy)
+
+    h2_consumed_fb1 = species.create_h2_species()
+    h2_consumed_fb1.moles = 1.5 * fe_partial_dri.moles + 0.5 * feo_partial_dri.moles + 0.5 * fe3o4_partial_dri.moles
+
+    h2o_produced_fb1 = species.create_h2o_species()
+    h2o_produced_fb1.moles = h2_consumed_fb1.moles
+
+    try:
+        h2o_produced_fb1.moles += ore.species('H2O').moles  # the LOI (loss on ignition) species in the ore
+    except KeyError:
+        pass  # no LOI species in the ore
+
+    ## Now add the second fluidized bed
+    ironmaking_device_fb2 = system.devices[ironmaking_device_names[1]]
+    fe_dri, feo_dri, fe3o4_dri, fe2o3_dri = iron_species_from_reduction_degree(reduction_degree, ore.mass, hematite_composition)
+
+    dri = species.Mixture('dri fines', [fe_dri, feo_dri, fe3o4_dri, fe2o3_dri,
+                                                    copy.copy(ore.species('CaO')),
+                                                    copy.copy(ore.species('MgO')),
+                                                    copy.copy(ore.species('SiO2')),
+                                                    copy.copy(ore.species('Al2O3')),
+                                                    copy.copy(ore.species('TiO2'))])
+    dri.temp_kelvin = reaction_temp
+    ironmaking_device_fb2.outputs['dri'].set(dri) 
+
+    delta_fe = fe_dri.moles - fe_partial_dri.moles
+    delta_feo = feo_dri.moles - feo_partial_dri.moles
+    delta_fe3o4 = fe3o4_dri.moles - fe3o4_partial_dri.moles
+
+    num_fe_formations = delta_fe
+    num_feo_formations = (num_fe_formations + delta_feo) / 3
+    num_fe3o4_formations = (num_feo_formations + delta_fe3o4) / 2
+
+    chemical_energy = EnergyFlow('chemical energy', - num_fe_formations * species.delta_h_feo_h2_fe_h2o(reaction_temp)
+                                 - num_feo_formations * species.delta_h_fe3o4_h2_3feo_h2o(reaction_temp)
+                                 - num_fe3o4_formations * species.delta_h_3fe2o3_h2_2fe3o4_h2o(reaction_temp))
+    ironmaking_device_fb2.inputs['chemical'].set(chemical_energy)
+
+    h2_consumed_fb2 = species.create_h2_species()
+    h2_consumed_fb2.moles = 1.5 * fe_dri.moles + 0.5 * feo_dri.moles + 0.5 * fe3o4_dri.moles \
+                        - h2_consumed_fb1.moles
+
+    h2o_produced_fb2 = species.create_h2o_species()
+    h2o_produced_fb2.moles = h2_consumed_fb2.moles
+
+    h2o_produced_fb1_fb2 = species.create_h2o_species()
+    h2o_produced_fb1_fb2.moles = h2_consumed_fb1.moles + h2_consumed_fb2.moles
+
+    # set the gas flows between the fluidised beds 
+    steelmaking_device = system.devices[system.system_vars['steelmaking device name']]
+    steel = steelmaking_device.outputs['steel'] 
+    slag = steelmaking_device.outputs['slag']
+
+    # stoichiometric amount for entire reduction.
+    stoichiometric_h2_moles = 1.5 * steel.species('Fe').moles + 0.5 * slag.species('FeO').moles
+    h2_total = species.create_h2_species()
+    assert excess_h2_ratio >= 1
+    h2_total.moles = stoichiometric_h2_moles * excess_h2_ratio
+
+    h2_excess_fb1 = species.create_h2_species()
+    h2_excess_fb1.moles = h2_total.moles - h2_consumed_fb1.moles - h2_consumed_fb2.moles 
+
+    h2_excess_fb2 = species.create_h2_species()
+    h2_excess_fb2.moles = h2_total.moles - h2_consumed_fb2.moles 
+
+    in_gas_fb2 = species.Mixture('H2', [h2_total])
+    in_gas_fb2.temp_kelvin = in_gas_temp_fb2
+    ironmaking_device_fb2.first_input_containing_name('h2 rich gas').set(in_gas_fb2)
+    
+    off_gas_fb2 = species.Mixture('H2 H2O', [h2o_produced_fb2, h2_excess_fb2])
+    off_gas_fb2.temp_kelvin = minimum_off_gas_temp_fb2  # initial guess of the off gas. solved iteratively later
+    ironmaking_device_fb2.first_output_containing_name('h2 rich gas').set(off_gas_fb2)
+
+    in_gas_fb1 = species.Mixture('H2 H2O', [h2o_produced_fb2, h2_excess_fb2])
+    in_gas_fb1.temp_kelvin = in_gas_temp_fb1
+    ironmaking_device_fb1.first_input_containing_name('h2 rich gas').set(in_gas_fb1)
+
+    off_gas_fb1 = species.Mixture('H2 H2O', [h2o_produced_fb1_fb2, h2_excess_fb1])
+    off_gas_fb1.temp_kelvin = minimum_off_gas_temp_fb1  # initial guess of the off gas. solved iteratively later
+    ironmaking_device_fb1.first_output_containing_name('h2 rich gas').set(off_gas_fb1)
+
+    # Assume some heat loss in the fluidised bed. TODO. Get a more robust justification for this
+    thermal_losses_frac = 0.04
+
+    # Then iteratively solve fo the off gas temp in fluidised bed 1 and fluidised bed 2
+    # to meet the energy balance
+    # This is solving for the out gas temp of both reactor simultaneously
+    max_iter = 1000
+    i = 0
+    while True:
+        thermal_losses_fb1 = -thermal_losses_frac * ironmaking_device_fb1.thermal_energy_balance()
+        energy_balance_fb1 = ironmaking_device_fb1.energy_balance() + thermal_losses_fb1
+
+        thermal_losses_fb2 = -thermal_losses_frac * ironmaking_device_fb2.thermal_energy_balance()
+        energy_balance_fb2 = ironmaking_device_fb2.energy_balance() + thermal_losses_fb2
+        if abs(energy_balance_fb1) < 2e-6 and abs(energy_balance_fb2) < 2e-6:
+            break
+        if i > max_iter:
+            raise Exception(f"Failed to converge on the out gas temp with excess h2 ratio = {excess_h2_ratio}. Reached max interation")
+
+        h2_rich_gas_fb1 = ironmaking_device_fb1.first_output_containing_name('h2 rich gas')
+        joules_per_kelvin = h2_rich_gas_fb1.cp(False) * h2_rich_gas_fb1.mass
+        new_out_temp_fb1 = h2_rich_gas_fb1.temp_kelvin - energy_balance_fb1 / joules_per_kelvin
+
+        h2_rich_gas_fb2 = ironmaking_device_fb2.first_output_containing_name('h2 rich gas')
+        joules_per_kelvin = h2_rich_gas_fb2.cp(False) * h2_rich_gas_fb2.mass
+        new_out_temp_fb2 = h2_rich_gas_fb2.temp_kelvin - energy_balance_fb2 / joules_per_kelvin
+
+        if new_out_temp_fb1 < minimum_off_gas_temp_fb1 or new_out_temp_fb2 < minimum_off_gas_temp_fb2:
+            raise IncreaseExcessHydrogenFluidizedBeds
+
+        ironmaking_device_fb1.first_output_containing_name('h2 rich gas').temp_kelvin = new_out_temp_fb1
+        ironmaking_device_fb2.first_output_containing_name('h2 rich gas').temp_kelvin = new_out_temp_fb2
+
+        i += 1
+
+    # add the calculated thermal losses
+    ironmaking_device_fb1.outputs['losses'].set(EnergyFlow('losses', thermal_losses_fb1))
+    ironmaking_device_fb2.outputs['losses'].set(EnergyFlow('losses', thermal_losses_fb2))
+
 def add_fluidized_bed_flows(system: System):
     ironmaking_device_names = system.system_vars['ironmaking device names']
     excess_h2_ratio = system.system_vars['fluidized beds h2 excess ratio']
@@ -790,6 +961,8 @@ def add_fluidized_bed_flows(system: System):
 
     ironmaking_device = system.devices[ironmaking_device_names[0]]
     ore = ironmaking_device.inputs['ore']
+
+    assert minimum_off_gas_temp > ore.temp_kelvin
 
     hematite_composition = system.system_vars['ore composition simple LOI removed']
     fe_dri, feo_dri, fe3o4_dri, fe2o3_dri = iron_species_from_reduction_degree(reduction_degree, ore.mass,
@@ -853,8 +1026,7 @@ def add_fluidized_bed_flows(system: System):
     off_gas.temp_kelvin = minimum_off_gas_temp
     ironmaking_device.first_output_containing_name('h2 rich gas').set(off_gas)
 
-    # Convection and conduction losses are 4% of input heat. EAF loss recommended 
-    # by Sujay Kumar Dutta pg 425
+    # Assume some heat loss in the fluidised bed. TODO. Get a more robust justification for this
     thermal_losses_frac = 0.04
 
     max_iter = 1000
