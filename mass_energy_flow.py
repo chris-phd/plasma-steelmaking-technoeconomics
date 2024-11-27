@@ -776,29 +776,30 @@ def add_two_cascaded_fluidized_bed_flows(system: System):
     """
     Uses a two cascaded fluidized bed to achieve high reduction degree and reduce the amount
     of hydrogen that is needed as a carrier of thermal energy. Only used in the DRI-EAF process.
+
+    TODO. Reduce repetition with add_fluidized_bed_flows
     """
     ironmaking_device_names = system.system_vars['ironmaking device names']
     excess_h2_ratio = system.system_vars['fluidized beds h2 excess ratio']
     reduction_degree = system.system_vars['fluidized beds reduction percent'] * 0.01
-    temp_range = system.system_vars['fluidized beds temp range']
-    reduction_degree_in_first_fluidized_bed = 0.65
+    reduction_degree_in_fluidized_bed_1 = system.system_vars['reduction percent in fluidized bed 1'] * 0.01
 
     assert len(ironmaking_device_names) > 0, 'Must have at least one iron making device'
     assert excess_h2_ratio >= 1.0
-    assert reduction_degree > reduction_degree_in_first_fluidized_bed
+    assert reduction_degree > reduction_degree_in_fluidized_bed_1
 
     ironmaking_device_fb1 = system.devices[ironmaking_device_names[0]]
     ore = ironmaking_device_fb1.inputs['ore']
 
     reaction_temp = celsius_to_kelvin(650)
-    in_gas_temp_fb1 = reaction_temp + temp_range * 0.5
+    in_gas_temp_fb1 = system.system_vars['h2 heater temp K']
     in_gas_temp_fb2 = in_gas_temp_fb1
-    minimum_off_gas_temp_fb1 = ore.temp_kelvin
+    minimum_off_gas_temp_fb1 = system.system_vars['ore heater temp K']
     minimum_off_gas_temp_fb2 = reaction_temp
 
     # Composition of the partial DRI after the first fluidized bed
     hematite_composition = system.system_vars['ore composition simple LOI removed']
-    fe_partial_dri, feo_partial_dri, fe3o4_partial_dri, fe2o3_partial_dri = iron_species_from_reduction_degree(reduction_degree_in_first_fluidized_bed, ore.mass,
+    fe_partial_dri, feo_partial_dri, fe3o4_partial_dri, fe2o3_partial_dri = iron_species_from_reduction_degree(reduction_degree_in_fluidized_bed_1, ore.mass,
                                                                                hematite_composition)
 
     partial_dri = species.Mixture('partial dri fines', [fe_partial_dri, feo_partial_dri, fe3o4_partial_dri, fe2o3_partial_dri,
@@ -947,22 +948,19 @@ def add_fluidized_bed_flows(system: System):
     ironmaking_device_names = system.system_vars['ironmaking device names']
     excess_h2_ratio = system.system_vars['fluidized beds h2 excess ratio']
     reduction_degree = system.system_vars['fluidized beds reduction percent'] * 0.01
-    temp_range = system.system_vars['fluidized beds temp range']
 
     assert len(ironmaking_device_names) > 0, 'Must have at least one iron making device'
     assert excess_h2_ratio >= 1.0
+
+    ironmaking_device = system.devices[ironmaking_device_names[0]]
+    ore = ironmaking_device.inputs['ore']
 
     # The difference between the lower minimum off gas temp and the in gas temp 
     # is more efficient has a major impact on the cost of the process. A tighter range
     # means more H2 is required to maintain the tight energy balance.
     reaction_temp = celsius_to_kelvin(650)
-    in_gas_temp = reaction_temp + temp_range * 0.5
-    minimum_off_gas_temp = reaction_temp - temp_range * 0.5
-
-    ironmaking_device = system.devices[ironmaking_device_names[0]]
-    ore = ironmaking_device.inputs['ore']
-
-    assert minimum_off_gas_temp > ore.temp_kelvin
+    in_gas_temp = system.system_vars['h2 heater temp K']
+    minimum_off_gas_temp = system.system_vars['ore heater temp K']
 
     hematite_composition = system.system_vars['ore composition simple LOI removed']
     fe_dri, feo_dri, fe3o4_dri, fe2o3_dri = iron_species_from_reduction_degree(reduction_degree, ore.mass,
