@@ -709,6 +709,50 @@ def create_mgo_species():
     return species
 
 
+def create_mn_species():
+    heat_capacities = [SimpleHeatCapacity(273.15, 298.0, 26.26),
+                       ShomateEquation(298.0, 980.0,  # solid phase
+                                       (27.24190, 5.237640, 7.783160,
+                                        -2.118501, -0.282113, -9.366891,
+                                        61.49640, 0.000000)),
+                       ShomateEquation(980.0, 1361.0,
+                                       (52.29870, -28.67560, 21.48670,
+                                        -4.979850, -2.432060, -21.24330,
+                                        90.70820, 0.000000)),
+                       ShomateEquation(1361.0, 1412.0,
+                                       (19.06450, 31.41340, -14.99350,
+                                        3.214741, 1.867090, -2.757881,
+                                        48.78900, 0.000000)),
+                        ShomateEquation(1412.0, 1519.0,
+                                       (-534.1720, 679.0530, -296.3700,
+                                        46.42660, 161.3420, 468.7150,
+                                        -393.5390, 0.000000)),
+                       SimpleHeatCapacity(1519.0, 3500.0, 46.024)  # liquid phase
+                       ]
+    latent_heats = [LatentHeat(1519.0, 12910.0)]
+    thermo_data = ThermoData(heat_capacities, latent_heats)
+    species = Species('Mn',
+                      0.0549380,
+                      thermo_data,
+                      0.0)
+    return species
+
+
+def create_mno_species():
+    heat_capacities = [SimpleHeatCapacity(273.15, 400.0, 37.0),# solid phase
+                       SimpleHeatCapacity(400.00, 600.0, 47.0),
+                       SimpleHeatCapacity(600.00, 1600.0, 56.0),
+                       SimpleHeatCapacity(1600.00, 3000.0, 60.0)# liquid phase
+                       ]
+    latent_heats = [LatentHeat(1519.0, 43900.0)]
+    thermo_data = ThermoData(heat_capacities, latent_heats)
+    species = Species('MnO',
+                      0.0709374,
+                      thermo_data,
+                      -385.2e3)
+    return species
+
+
 def create_ch4_species():
     c = create_c_species()
     h2 = create_h2_species()
@@ -906,6 +950,23 @@ def delta_h_sio2_h2_si_h2o(temp_kelvin: float = 298.15) -> float:
     h2o = create_h2o_species()
     h2o.moles = 2
     products = [si, h2o]
+    return compute_reaction_enthalpy(reactants, products, temp_kelvin)
+
+
+def delta_h_2mn_o2_2mno(temp_kelvin: float = 298.15) -> float:
+    """
+    2Mn + O2 -> 2MnO
+    Returns:
+        enthalpy of reaction [J / mol of reaction]
+    """
+    mn = create_mn_species()
+    mn.moles = 2
+    o2 = create_o2_species()
+    o2.moles = 1
+    reactants = [mn, o2]
+    mno = create_mno_species()
+    mno.moles = 2
+    products = [mno]
     return compute_reaction_enthalpy(reactants, products, temp_kelvin)
 
 

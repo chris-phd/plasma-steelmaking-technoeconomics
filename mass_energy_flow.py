@@ -380,7 +380,7 @@ def read_ore_composition_from_csv(filename: str, template_ore_composition: Dict[
 def add_ore_composition(system: System, print_debug_messages: bool = True):
     """
     Add 'ore composition' and 'ore composition simple' to the system variables.
-    Ore composition simple is the hematite / goethite ore with only SiO2, Al2O3, CaO, MgO and TiO2
+    Ore composition simple is the hematite / goethite ore with only SiO2, Al2O3, CaO, MgO, Mn and TiO2
     impurities.
     """
     ore_name = system.system_vars.get('ore name', 'default')
@@ -487,6 +487,7 @@ def add_ore_composition(system: System, print_debug_messages: bool = True):
         - ore_composition_complex['Al2O3'] \
         - ore_composition_complex['CaO'] \
         - ore_composition_complex['MgO'] \
+        - ore_composition_complex['Mn'] \
         - ore_composition_complex.get('TiO2', 0.0) \
         - ore_composition_complex.get('LOI', 0.0)
     ore_composition_simple = {'Fe': ore_composition_complex['Fe'],
@@ -494,6 +495,7 @@ def add_ore_composition(system: System, print_debug_messages: bool = True):
                               'Al2O3': ore_composition_complex['Al2O3'],
                               'CaO': ore_composition_complex['CaO'],
                               'MgO': ore_composition_complex['MgO'],
+                              'Mn': ore_composition_complex['Mn'],
                               'TiO2': ore_composition_complex.get('TiO2', 0.0) + mass_of_neglected_species}
     if 'LOI' in ore_composition_complex:
         ore_composition_simple['LOI'] = ore_composition_complex['LOI']
@@ -558,6 +560,7 @@ def add_slag_and_flux_mass(system: System):
     al2o3_gangue = species.create_al2o3_species()
     cao_gangue = species.create_cao_species()
     mgo_gangue = species.create_mgo_species()
+    mn_gangue = species.create_mn_species()
     tio2_gangue = species.create_tio2_species()
     cao_flux = species.create_cao_species()
     mgo_flux = species.create_mgo_species()
@@ -565,6 +568,7 @@ def add_slag_and_flux_mass(system: System):
     al2o3_slag = species.create_al2o3_species()
     cao_slag = species.create_cao_species()
     mgo_slag = species.create_mgo_species()
+    mn_slag = species.create_mn_species()
     tio2_slag = species.create_tio2_species()
 
     steelmaking_device = system.devices[steelmaking_device_name]
@@ -575,8 +579,13 @@ def add_slag_and_flux_mass(system: System):
     except KeyError:
         si_in_steel = species.create_si_species()
 
+    try:
+        mn_in_steel = steelmaking_device.outputs['steel'].species('Mn')
+    except KeyError:
+        mn_in_steel = species.create_mn_species()
+
     # iterative solve for the ore and slag mass
-    ore_mass = 1666.0  # kg, initial guess
+    ore_mass = 1000.0 / ore_composition_simple['Fe'] # kg, initial guess
     for _ in range(10):
         _, feo_after_reduction, _, _ = iron_species_from_reduction_degree(final_reduction_degree, ore_mass,
                                                                           ore_composition_simple)
@@ -586,13 +595,18 @@ def add_slag_and_flux_mass(system: System):
         al2o3_gangue.mass = ore_mass * ore_composition_simple['Al2O3'] * 0.01
         cao_gangue.mass = ore_mass * ore_composition_simple['CaO'] * 0.01
         mgo_gangue.mass = ore_mass * ore_composition_simple['MgO'] * 0.01
+        mn_gangue.mass = ore_mass * ore_composition_simple['Mn'] * 0.01
         tio2_gangue.mass = ore_mass * ore_composition_simple['TiO2'] * 0.01
 
         if si_in_steel.moles > sio2_gangue.moles:
             raise DecreaseSiInHotMetal
+        
+        if mn_in_steel.moles > mn_gangue.moles:
+            raise DecreaseMnInHotMetal
 
         sio2_slag.moles = sio2_gangue.moles - si_in_steel.moles
         al2o3_slag.moles = al2o3_gangue.moles
+        mn_slag.moles = mn_gangue.moles - mn_in_steel.moles
         tio2_slag.moles = tio2_gangue.moles
 
         cao_flux_mass = b2_basicity * sio2_slag.mass - cao_gangue.mass
@@ -608,9 +622,9 @@ def add_slag_and_flux_mass(system: System):
 
         for _ in range(10):
             if not use_mgo_slag_weight_perc:
-                slag_mass = sio2_slag.mass + al2o3_slag.mass + cao_slag.mass + mgo_slag.mass + tio2_slag.mass + feo_slag.mass
+                slag_mass = sio2_slag.mass + al2o3_slag.mass + cao_slag.mass + mgo_slag.mass + mn_slag.mass + tio2_slag.mass + feo_slag.mass
             else:
-                slag_mass = (sio2_slag.mass + al2o3_slag.mass + cao_slag.mass + feo_slag.mass + tio2_slag.mass) / (
+                slag_mass = (sio2_slag.mass + al2o3_slag.mass + cao_slag.mass + feo_slag.mass + mn_slag.mass + tio2_slag.mass) / (
                         1.0 - mgo_in_slag_perc * 0.01)
                 mgo_slag.mass = max(slag_mass * mgo_in_slag_perc * 0.01, mgo_gangue.mass)
                 mgo_flux.moles = mgo_slag.moles - mgo_gangue.moles
@@ -628,7 +642,7 @@ def add_slag_and_flux_mass(system: System):
     flux.temp_kelvin = system.system_vars['steel exit temp K']
     steelmaking_device.inputs['flux'].set(flux)
 
-    slag = species.Mixture('slag', [feo_slag, sio2_slag, al2o3_slag, cao_slag, mgo_slag, tio2_slag])
+    slag = species.Mixture('slag', [feo_slag, sio2_slag, al2o3_slag, cao_slag, mgo_slag, mn_slag, tio2_slag])
     slag.temp_kelvin = system.system_vars['steel exit temp K']
     steelmaking_device.outputs['slag'].set(slag)
 
@@ -681,6 +695,7 @@ def add_ore(system: System):
     mgo_gangue.mass = slag_mixture.species('MgO').mass - flux_mixtures.species('MgO').mass
     sio2_gangue = copy.copy(slag_mixture.species('SiO2'))
     al2o3_gangue = copy.copy(slag_mixture.species('Al2O3'))
+    mn_gangue = copy.copy(slag_mixture.species('Mn'))
     tio2_gangue = copy.copy(slag_mixture.species('TiO2'))
 
     try:
@@ -690,7 +705,7 @@ def add_ore(system: System):
     except KeyError:
         pass
 
-    gangue_mass = sio2_gangue.mass + al2o3_gangue.mass + cao_gangue.mass + mgo_gangue.mass + tio2_gangue.mass
+    gangue_mass = sio2_gangue.mass + al2o3_gangue.mass + cao_gangue.mass + mgo_gangue.mass + mn_gangue.mass + tio2_gangue.mass
     ore_mass = gangue_mass / (ore_composition_simple['gangue'] * 0.01)
 
     fe2o3_ore = species.create_fe2o3_species()
@@ -704,7 +719,7 @@ def add_ore(system: System):
 
     ore = species.Mixture('ore', [fe2o3_ore, fe3o4, feo, fe,
                                   cao_gangue, mgo_gangue, sio2_gangue, al2o3_gangue,
-                                  tio2_gangue, water_loi])
+                                  mn_gangue, tio2_gangue, water_loi])
     ore.temp_kelvin = ore_initial_temp
 
     if ore_heater_device_name is not None:
@@ -807,6 +822,7 @@ def add_two_cascaded_fluidized_bed_flows(system: System):
                                                     copy.copy(ore.species('MgO')),
                                                     copy.copy(ore.species('SiO2')),
                                                     copy.copy(ore.species('Al2O3')),
+                                                    copy.copy(ore.species('Mn')),
                                                     copy.copy(ore.species('TiO2'))])
     partial_dri.temp_kelvin = reaction_temp
     ironmaking_device_fb1.outputs['dri'].set(partial_dri)
@@ -845,6 +861,7 @@ def add_two_cascaded_fluidized_bed_flows(system: System):
                                                     copy.copy(ore.species('MgO')),
                                                     copy.copy(ore.species('SiO2')),
                                                     copy.copy(ore.species('Al2O3')),
+                                                    copy.copy(ore.species('Mn')),
                                                     copy.copy(ore.species('TiO2'))])
     dri.temp_kelvin = reaction_temp
     ironmaking_device_fb2.outputs['dri'].set(dri) 
@@ -971,6 +988,7 @@ def add_fluidized_bed_flows(system: System):
                                         copy.copy(ore.species('MgO')),
                                         copy.copy(ore.species('SiO2')),
                                         copy.copy(ore.species('Al2O3')),
+                                        copy.copy(ore.species('Mn')),
                                         copy.copy(ore.species('TiO2'))])
     dri.temp_kelvin = reaction_temp
     ironmaking_device.outputs['dri'].set(dri)
@@ -1827,6 +1845,7 @@ def add_h2_heater_flows(system: System):
 def add_bof_flows(system: System):
     initial_c_perc = system.system_vars['bof hot metal C perc']
     initial_si_perc = system.system_vars['bof hot metal Si perc']
+    initial_mn_perc = system.system_vars['bof hot metal Mn perc']
     feo_in_slag_perc = system.system_vars['bof feo in slag perc']
     b2 = system.system_vars['bof b2 basicity']
     b4 = system.system_vars['bof b4 basicity']
@@ -1840,6 +1859,8 @@ def add_bof_flows(system: System):
     feo_slag = species.create_feo_species()
     sio2_slag = species.create_sio2_species()
     si_hot_metal = species.create_si_species()
+    mno_slag = species.create_mno_species()
+    mn_hot_metal = species.create_mn_species()
     cao_slag = species.create_cao_species()
     mgo_slag = species.create_mgo_species()
     cao_flux = species.create_cao_species()
@@ -1853,11 +1874,16 @@ def add_bof_flows(system: System):
     si_hot_metal.mass = initial_si_perc * 0.01 * hot_metal.mass
     si_hot_metal.temp_kelvin = hot_metal.temp_kelvin
     hot_metal.merge(si_hot_metal)
+    mn_hot_metal.mass = initial_mn_perc * 0.01 * hot_metal.mass
+    mn_hot_metal.temp_kelvin = hot_metal.temp_kelvin
+    hot_metal.merge(mn_hot_metal)
 
     sio2_slag.moles = si_hot_metal.moles
     sio2_slag.temp_kelvin = hot_metal.temp_kelvin
     cao_flux.moles = b2 * sio2_slag.moles
     cao_slag.moles = cao_flux.moles
+    mno_slag.moles = mn_hot_metal.moles
+    mno_slag.temp_kelvin = hot_metal.temp_kelvin
 
     if use_mgo_slag_weight_perc:
         # Use MgO% in slag to determine MgO flux.
@@ -1880,7 +1906,7 @@ def add_bof_flows(system: System):
     flux.temp_kelvin = celsius_to_kelvin(25)
     bof.inputs['flux'].set(flux)
 
-    slag = species.Mixture('slag', [sio2_slag, cao_slag, mgo_slag, feo_slag])
+    slag = species.Mixture('slag', [sio2_slag, mno_slag, cao_slag, mgo_slag, feo_slag])
     slag.temp_kelvin = hot_metal.temp_kelvin
     bof.outputs['slag'].set(slag)
 
@@ -1892,7 +1918,7 @@ def add_bof_flows(system: System):
     carbon_gas.temp_kelvin = co_emitted.temp_kelvin
     bof.outputs['carbon gas'].set(carbon_gas)
 
-    o2_injected.moles = 0.5 * co_emitted.moles + 0.5 * feo_slag.moles + sio2_slag.moles
+    o2_injected.moles = 0.5 * co_emitted.moles + 0.5 * feo_slag.moles + sio2_slag.moles + mno_slag.moles
     o2_injected.temp_kelvin = celsius_to_kelvin(25)
     bof.inputs['O2'].set(o2_injected)
 
@@ -1902,7 +1928,8 @@ def add_bof_flows(system: System):
     reaction_temp = hot_metal.temp_kelvin
     chemical_energy = -species.delta_h_2c_o2_2co(reaction_temp) * co_emitted.moles * 0.5 \
                       -species.delta_h_2fe_o2_2feo(reaction_temp) * feo_slag.moles * 0.5 \
-                      -species.delta_h_si_o2_sio2(reaction_temp) * sio2_slag.moles
+                      -species.delta_h_si_o2_sio2(reaction_temp) * sio2_slag.moles \
+                      -species.delta_h_2mn_o2_2mno(reaction_temp) * mno_slag.moles * 0.5
 
     bof.inputs['chemical'].energy = chemical_energy
 
@@ -2017,6 +2044,10 @@ class IncreaseExcessHydrogenFluidizedBeds(Exception):
 
 
 class DecreaseSiInHotMetal(Exception):
+    pass
+
+
+class DecreaseMnInHotMetal(Exception):
     pass
 
 
