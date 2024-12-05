@@ -390,14 +390,14 @@ def add_ore_composition(system: System, print_debug_messages: bool = True):
     ore_composition_complex = {'Fe': 65.263,
                                'SiO2': 3.814,
                                'Al2O3': 2.437,
-                               'TiO2': 0.095,
-                               'Mn': 0.148,
+                               'TiO2': 0.399,
+                               'Mn': 0.0,
                                'CaO': 0.032,
                                'MgO': 0.085,
-                               'Na2O': 0.012,
-                               'K2O': 0.011,
-                               'P': 0.109,
-                               'S': 0.024}
+                               'Na2O': 0.0,
+                               'K2O': 0.0,
+                               'P': 0.0,
+                               'S': 0.0}
 
     if ore_name.upper() == 'IOA':
         ore_composition_complex = {'Fe': 66.31,
