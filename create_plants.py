@@ -559,7 +559,7 @@ def add_bof_system_vars(system_vars: Dict[str, Any], ironmaking_device_name: str
     system_vars['bof slag mgo weight perc'] = 7.0
     system_vars['bof feo in slag perc'] = 12.5  # turkdogan1996 8.2.1a
     system_vars['bof hot metal Si perc'] = 0.4  # turkdogan1996 8.2
-    system_vars['bof hot metal Mn perc'] = 0.1  # turkdogan1996 8.2
+    system_vars['bof hot metal Mn perc'] = 0.2  # turkdogan1996 8.2
     system_vars['bof hot metal C perc'] = 2.0  # perc C from the ironmaking step TODO could reduce this to min for heat balance
 
 

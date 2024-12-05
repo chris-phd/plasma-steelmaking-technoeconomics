@@ -158,6 +158,14 @@ def solve_mass_energy_flow(system: System, mass_and_energy_func: Callable, print
             if print_debug_messages:
                 print(
                     f"System {system.name} did not converge. Decreasing hot metal Si perc to {system_vars_solved['bof hot metal Si perc']}")
+        except DecreaseMnInHotMetal:
+            if system_vars_solved['bof hot metal Mn perc'] < 0.05:
+                system_vars_solved['bof hot metal Mn perc'] = 0.0
+            else:
+                system_vars_solved['bof hot metal Mn perc'] *= 0.8
+            if print_debug_messages:
+                print(
+                    f"System {system.name} did not converge. Decreasing hot metal Mn perc to {system_vars_solved['bof hot metal Si perc']}")
         except IncreaseInjectedO2:
             if not system_vars_solved['o2 injection kg']:
                 system_vars_solved['o2 injection kg'] = 0.05
@@ -476,7 +484,7 @@ def add_ore_composition(system: System, print_debug_messages: bool = True):
                                                                                                                 0.0)
     ore_composition_complex = hematite_normalise(ore_composition_complex)
 
-    # Removing the gangue elements other than SiO2, Al2O3, CaO, MgO and TiO2. Adding the mass of 
+    # Removing the gangue elements other than SiO2, Al2O3, CaO, MgO, Mn and TiO2. Adding the mass of 
     # ignored elements to the mass of TiO2 since it doesn't contribute to the basicity / flux. Simplification 
     # for the mass flow calculations. Values are in mass / weight percent.
     mass_of_neglected_species = sum(ore_composition_complex.values()) \
@@ -585,7 +593,7 @@ def add_slag_and_flux_mass(system: System):
         mn_in_steel = species.create_mn_species()
 
     # iterative solve for the ore and slag mass
-    ore_mass = 1000.0 / ore_composition_simple['Fe'] # kg, initial guess
+    ore_mass = 1666.0 
     for _ in range(10):
         _, feo_after_reduction, _, _ = iron_species_from_reduction_degree(final_reduction_degree, ore_mass,
                                                                           ore_composition_simple)
@@ -598,6 +606,7 @@ def add_slag_and_flux_mass(system: System):
         mn_gangue.mass = ore_mass * ore_composition_simple['Mn'] * 0.01
         tio2_gangue.mass = ore_mass * ore_composition_simple['TiO2'] * 0.01
 
+        # These checks should really go after the ore mass has converged
         if si_in_steel.moles > sio2_gangue.moles:
             raise DecreaseSiInHotMetal
         
@@ -702,6 +711,13 @@ def add_ore(system: System):
         # if some silicon ended up in the hot metal (BOF systems)
         si_in_steel = steelmaking_device.outputs['steel'].species('Si')
         sio2_gangue.moles += si_in_steel.moles
+    except KeyError:
+        pass
+
+    try:
+        # if some manganese ended up in the hot metal (BOF systems)
+        mn_in_steel = steelmaking_device.outputs['steel'].species('Mn')
+        mn_gangue.moles += mn_in_steel.moles
     except KeyError:
         pass
 
@@ -1887,12 +1903,12 @@ def add_bof_flows(system: System):
 
     if use_mgo_slag_weight_perc:
         # Use MgO% in slag to determine MgO flux.
-        total_slag_mass = (cao_slag.mass + sio2_slag.mass) / (1 - (feo_in_slag_perc + mgo_in_slag_perc) * 0.01)
+        total_slag_mass = (cao_slag.mass + sio2_slag.mass + mno_slag.mass) / (1 - (feo_in_slag_perc + mgo_in_slag_perc) * 0.01)
         mgo_slag.mass = mgo_in_slag_perc * 0.01 * total_slag_mass
     else:
         # use B4 basicity to determine MgO in slag 
         mgo_slag.moles = b4 * sio2_slag.moles
-        total_slag_mass = (cao_slag.mass + sio2_slag.mass) / (1 - feo_in_slag_perc * 0.01)
+        total_slag_mass = (cao_slag.mass + sio2_slag.mass + mno_slag.mass + mgo_slag.mass) / (1 - feo_in_slag_perc * 0.01)
 
     mgo_flux.moles = mgo_slag.moles
 
@@ -1918,7 +1934,7 @@ def add_bof_flows(system: System):
     carbon_gas.temp_kelvin = co_emitted.temp_kelvin
     bof.outputs['carbon gas'].set(carbon_gas)
 
-    o2_injected.moles = 0.5 * co_emitted.moles + 0.5 * feo_slag.moles + sio2_slag.moles + mno_slag.moles
+    o2_injected.moles = 0.5 * co_emitted.moles + 0.5 * feo_slag.moles + sio2_slag.moles + 0.5 * mno_slag.moles
     o2_injected.temp_kelvin = celsius_to_kelvin(25)
     bof.inputs['O2'].set(o2_injected)
 
