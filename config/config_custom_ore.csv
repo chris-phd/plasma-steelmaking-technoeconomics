@@ -1,2 +1,5 @@
 system name,variable name,variable value,variable type,comment
-all,ore name,config/custom_ore_complex.csv,string,"This is the relative path to the ore.csv file. May need to change this when running on windows."
+all,system lifetime years,20,number
+all,annual steel production tonnes,1.5e6,number
+all,on premises h2 production,False,boolean
+all,ore name,custom_ore_complex.csv,string,"This is file name of the ore.csv file that describes the custom ore composition. Only hematite is supported."

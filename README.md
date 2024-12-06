@@ -79,4 +79,7 @@ To increase slag basicity for all systems:
 all,b2 basicity,3.5,number
 ```
 
-config/config_custom_ore.csv shows how to use an ore with a custom ore composition. Currently, only hematite ore is supported.
+To run the model with different ore compositions, set the desired ore composition in the `custom_ore_complex.csv` file. Then run the simulation using the config file `config/config_custom_ore.csv`. Only hematite ore is supported.
+```
+python tea_main.py -c config/config_custom_ore.csv -p config/prices_default.csv
+```

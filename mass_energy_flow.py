@@ -5,6 +5,7 @@ import csv
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import os
 from typing import Dict, List, Callable, Optional
 
 from create_plants import create_plasma_system, create_dri_eaf_system, create_hybrid_system
@@ -462,7 +463,9 @@ def add_ore_composition(system: System, print_debug_messages: bool = True):
                       'LOI': system.system_vars['ore loi content weight perc']}
         ore_composition_complex = fe_content_to_hematite(fe_content, ore_composition_complex)
     elif ".csv" in ore_name.lower():
-        ore_composition_complex = read_ore_composition_from_csv(ore_name, ore_composition_complex)
+        # read the file config/ore_name
+        relative_file_path = os.path.join('config', ore_name)
+        ore_composition_complex = read_ore_composition_from_csv(relative_file_path, ore_composition_complex)
     else:
         ore_name = "default"
         if print_debug_messages:
