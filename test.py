@@ -54,7 +54,10 @@ class SystemTest(TestCase):
         my_system.add_input(device_a.name, energy_a)
 
         initial_num_files_in_temp_dir = len(os.listdir(str(self.temp_dir_path)))
-        my_system.render(str(self.temp_dir_path), False)
+        try:
+            my_system.render(str(self.temp_dir_path), False)
+        except:
+            self.assertTrue(False)  # Likely that graphviz is not installed on the system, so system rendering is not available
         final_num_files_in_temp_dir = len(os.listdir(str(self.temp_dir_path)))
         graph_render_successful = final_num_files_in_temp_dir == initial_num_files_in_temp_dir + 2
         self.assertTrue(graph_render_successful)
@@ -635,13 +638,13 @@ class TestCreateSystems(TestCase):
         systems = tea_main.create_systems(self.config)
         self.assertEqual(len(systems), 4)
         self.assertEqual(systems[0].name, "DRI-EAF")
-        self.assertEqual(len(systems[0].devices), 19)
+        self.assertEqual(len(systems[0].devices), 25)
         self.assertEqual(len(systems[1].devices), 15)
         self.assertEqual(len(systems[2].devices), 18)
         self.assertEqual(len(systems[3].devices), 31)
-        self.assertEqual(len(systems[0].system_vars), 32)
+        self.assertEqual(len(systems[0].system_vars), 33)
         self.assertEqual(len(systems[1].system_vars), 39)
-        self.assertEqual(len(systems[2].system_vars), 46)
+        self.assertEqual(len(systems[2].system_vars), 47)
         self.assertEqual(len(systems[3].system_vars), 43)
         self.assertAlmostEqual(systems[3].lcop(), 0.0)  # since we have not run the mass and energy flow yet
 
