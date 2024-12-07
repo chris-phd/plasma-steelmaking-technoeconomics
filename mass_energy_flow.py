@@ -798,10 +798,12 @@ def iron_species_from_reduction_degree(reduction_degree: float, initial_ore_mass
         # Mix of magnetite and wustite
         fe3o4.moles = 3 * n_hem_i * (1 - reduction_degree) - n_fe_t
         feo.moles = 3 * n_hem_i * (1 - reduction_degree) - 4 * fe3o4.moles
-    elif 0 <= reduction_degree < (1 / 9):
+    elif 0 < reduction_degree < (1 / 9):
         # Mix of hematite and magnetite
         fe2o3.moles = 9 * n_hem_i * (1 - reduction_degree) - 4 * n_fe_t
         fe3o4.moles = (3 * n_hem_i * (1 - reduction_degree) - 3 * fe2o3.moles) / 4
+    elif reduction_degree == 0:
+        fe2o3.moles = n_hem_i
 
     return fe, feo, fe3o4, fe2o3
 
