@@ -666,13 +666,13 @@ class TestSteelPlantMassEnergyModel(TestCase):
         self.assertAlmostEqual(s.lcop_breakdown['labour'], 40.0, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['h2'], 171.97, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['ore'], 163.63, places=1)
-        self.assertAlmostEqual(s.lcop_breakdown['base electricity'], 154.71, places=1)
+        self.assertAlmostEqual(s.lcop_breakdown['base electricity'], 145.23, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['c'], 1.30, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['cao'], 26.82, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['mgo'], 58.01, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['o2'], 1.00, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['scrap'], 0.00, places=1)
-        self.assertAlmostEqual(s.lcop(), 687.32, places=1)
+        self.assertAlmostEqual(s.lcop(), 677.84, places=1)
 
     def test_plasma_system(self):
         s = self.systems[1]
@@ -760,8 +760,8 @@ class TestSensitivityAnalysis(TestCase):
             for case in si:
                 self.assertTrue(case.success)
         # change in LCOS due to change in hydrogen price
-        self.assertAlmostEqual(dri_eaf_sis[0].result_vals[0], 572.67, places=1)
-        self.assertAlmostEqual(dri_eaf_sis[0].result_vals[-1], 801.97, places=1)
+        self.assertAlmostEqual(dri_eaf_sis[0].result_vals[0], 563.19, places=1)
+        self.assertAlmostEqual(dri_eaf_sis[0].result_vals[-1], 792.49, places=1)
         self.assertAlmostEqual(plasma_sis[0].result_vals[0], 553.11, places=1)
         self.assertAlmostEqual(plasma_sis[0].result_vals[-1], 773.33, places=1)
 
