@@ -547,6 +547,11 @@ class ReactionsTest(TestCase):
         delta_h = species.delta_h_si_o2_sio2(temp_kelvin)
         self.assertAlmostEqual(delta_h, factsage_delta_h, delta=0.06 * abs(factsage_delta_h))
 
+        temp_kelvin = 298.15
+        factsage_delta_h = -769856.0
+        delta_h = species.delta_h_2mn_o2_2mno(temp_kelvin)
+        self.assertAlmostEqual(delta_h, factsage_delta_h, delta=0.01 * abs(factsage_delta_h))
+
 
 class HydrogenPlasmaTest(TestCase):
     def setUp(self):
