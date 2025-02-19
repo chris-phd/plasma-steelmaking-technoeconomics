@@ -1,11 +1,14 @@
 # Plasma Steelmaking Technoeconomic Analysis
 ## About
-This project is a technoeconomic assessment of four different low-emission steel plants; three plasma-based steelmaking processes and the more established hydrogen direct reduction – electric arc furnace (HDR-EAF) pathway. The code accompanies a paper that is currently under peer review.
+This project is a technoeconomic assessment of four different low-emission steel plants; three plasma-based steelmaking processes and the more established hydrogen direct reduction – electric arc furnace (HDR-EAF) pathway. The code accompanies a paper published via peer review in the Journal of Cleaner Production.
 
 ```
-@article{cooper2024technoeconomic,
+@article{cooper2025technoeconomic,
   title={Technoeconomic analysis of low-emission steelmaking using hydrogen thermal plasma},
-  author={Cooper, Christopher and Brooks, Geoffrey and Rhamdhani, M. Akbar and Pye, John and Rahbari, Alireza}
+  author={Cooper, Christopher and Brooks, Geoffrey and Rhamdhani, M Akbar and Pye, John and Rahbari, Alireza},
+  journal={Journal of Cleaner Production},
+  pages={144896},
+  year={2025},
 }
 ```
 
