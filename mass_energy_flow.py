@@ -129,15 +129,15 @@ def solve_mass_energy_flow(system: System, mass_and_energy_func: Callable, print
             mass_and_energy_func(system_solved, print_debug_messages)
             converged = True
         except IncreaseExcessHydrogenPlasma:
-            system_vars_solved['plasma h2 utilisation'] *= 0.99
+            system_vars_solved['plasma h2 utilization'] *= 0.99
             if print_debug_messages:
                 print(
-                    f"System {system.name} did not converge. Decreasing plasma h2 utilisation to {system_vars_solved['plasma h2 utilisation']}")
+                    f"System {system.name} did not converge. Decreasing plasma h2 utilization to {system_vars_solved['plasma h2 utilization']}")
         except IncreaseExcessHydrogenFluidizedBeds:
-            system_vars_solved['fluidized beds h2 excess ratio'] *= 1.01
+            system_vars_solved['fluidized beds h2 utilization'] *= 0.99
             if print_debug_messages:
                 print(
-                    f"System {system.name} did not converge. Increasing fluidized bed excess h2 ratio to {system_vars_solved['fluidized beds h2 excess ratio']}")
+                    f"System {system.name} did not converge. Decreasing fluidized beds h2 utilization to {system_vars_solved['fluidized beds h2 utilization']}")
         except IncreaseCInHotMetal:
             system_vars_solved['bof hot metal C perc'] *= 1.01
             if print_debug_messages:
@@ -807,12 +807,12 @@ def add_two_cascaded_fluidized_bed_flows(system: System):
     TODO. Reduce repetition with add_fluidized_bed_flows
     """
     ironmaking_device_names = system.system_vars['ironmaking device names']
-    excess_h2_ratio = system.system_vars['fluidized beds h2 excess ratio']
+    h2_utilization = system.system_vars['fluidized beds h2 utilization']
     reduction_degree = system.system_vars['fluidized beds reduction percent'] * 0.01
     reduction_degree_in_fluidized_bed_1 = system.system_vars['reduction percent in fluidized bed 1'] * 0.01
 
     assert len(ironmaking_device_names) > 0, 'Must have at least one iron making device'
-    assert excess_h2_ratio >= 1.0
+    assert h2_utilization > 0.0 and h2_utilization <= 1.0
     assert reduction_degree > reduction_degree_in_fluidized_bed_1
 
     ironmaking_device_fb1 = system.devices[ironmaking_device_names[0]]
@@ -901,16 +901,9 @@ def add_two_cascaded_fluidized_bed_flows(system: System):
     h2o_produced_fb1_fb2 = species.create_h2o_species()
     h2o_produced_fb1_fb2.moles = h2_consumed_fb1.moles + h2_consumed_fb2.moles
 
-    # set the gas flows between the fluidised beds 
-    steelmaking_device = system.devices[system.system_vars['steelmaking device name']]
-    steel = steelmaking_device.outputs['steel'] 
-    slag = steelmaking_device.outputs['slag']
-
     # stoichiometric amount for entire reduction.
-    stoichiometric_h2_moles = 1.5 * steel.species('Fe').moles + 0.5 * slag.species('FeO').moles
     h2_total = species.create_h2_species()
-    assert excess_h2_ratio >= 1
-    h2_total.moles = stoichiometric_h2_moles * excess_h2_ratio
+    h2_total.moles = (h2_consumed_fb1.moles + h2_consumed_fb2.moles) / h2_utilization
 
     h2_excess_fb1 = species.create_h2_species()
     h2_excess_fb1.moles = h2_total.moles - h2_consumed_fb1.moles - h2_consumed_fb2.moles 
@@ -951,7 +944,7 @@ def add_two_cascaded_fluidized_bed_flows(system: System):
         if abs(energy_balance_fb1) < 2e-6 and abs(energy_balance_fb2) < 2e-6:
             break
         if i > max_iter:
-            raise Exception(f"Failed to converge on the out gas temp with excess h2 ratio = {excess_h2_ratio}. Reached max interation")
+            raise Exception(f"Failed to converge on the out gas temp with h2 utilization = {h2_utilization}. Reached max interation")
 
         h2_rich_gas_fb1 = ironmaking_device_fb1.first_output_containing_name('h2 rich gas')
         joules_per_kelvin = h2_rich_gas_fb1.cp(False) * h2_rich_gas_fb1.mass
@@ -975,11 +968,11 @@ def add_two_cascaded_fluidized_bed_flows(system: System):
 
 def add_fluidized_bed_flows(system: System):
     ironmaking_device_names = system.system_vars['ironmaking device names']
-    excess_h2_ratio = system.system_vars['fluidized beds h2 excess ratio']
+    h2_utilization = system.system_vars['fluidized beds h2 utilization']
     reduction_degree = system.system_vars['fluidized beds reduction percent'] * 0.01
 
     assert len(ironmaking_device_names) > 0, 'Must have at least one iron making device'
-    assert excess_h2_ratio >= 1.0
+    assert h2_utilization > 0.0 and h2_utilization <= 1.0
 
     ironmaking_device = system.devices[ironmaking_device_names[0]]
     ore = ironmaking_device.inputs['ore']
@@ -1030,16 +1023,10 @@ def add_fluidized_bed_flows(system: System):
     except KeyError:
         pass  # no LOI species in the ore
 
-    steelmaking_device = system.devices[system.system_vars['steelmaking device name']]
-    steel = steelmaking_device.outputs['steel'] 
-    slag = steelmaking_device.outputs['slag']
-
     # stoichiometric amount for entire reduction, even if only partial reduction occurs here.
     # needed to garatee correct gas oxidation degree is achieved.
-    stoichiometric_h2_moles = 1.5 * steel.species('Fe').moles + 0.5 * slag.species('FeO').moles
     h2_total = species.create_h2_species()
-    assert excess_h2_ratio >= 1
-    h2_total.moles = stoichiometric_h2_moles * excess_h2_ratio
+    h2_total.moles = h2_consumed.moles / h2_utilization
 
     h2_excess = species.create_h2_species()
     h2_excess.moles = h2_total.moles - h2_consumed.moles
@@ -1065,7 +1052,7 @@ def add_fluidized_bed_flows(system: System):
         if abs(energy_balance) < 2e-6:
             break
         if i > max_iter:
-            raise Exception(f"Failed to converge on the out gas temp with excess h2 ratio = {excess_h2_ratio}. Reached max interation")
+            raise Exception(f"Failed to converge on the out gas temp with h2 utilization = {h2_utilization}. Reached max interation")
 
         h2_rich_gas = ironmaking_device.first_output_containing_name('h2 rich gas')
         joules_per_kelvin = h2_rich_gas.cp(False) * h2_rich_gas.mass
@@ -1249,7 +1236,7 @@ def add_plasma_flows_final(system: System):
     # remaining in iron oxide, compared to the mass of oxygen in the hematite at the very start of the process.
     reduction_degree = system.system_vars['plasma reduction percent'] * 0.01
     plasma_temp = system.system_vars['plasma temp K']
-    h2_utilisation = system.system_vars['plasma h2 utilisation']
+    h2_utilization = system.system_vars['plasma h2 utilization']
     steelmaking_device_name = system.system_vars['steelmaking device name']
     plasma_smelter = system.devices[steelmaking_device_name]
     plasma_torch = system.devices['plasma torch']
@@ -1310,9 +1297,9 @@ def add_plasma_flows_final(system: System):
     h2o.moles = num_fe_formations + num_feo_formations + num_fe3o4_formations + 2 * num_si_formations
     h2_consumed_moles = h2o.moles
 
-    assert h2_utilisation > 0.0 and h2_utilisation < 1.0
+    assert h2_utilization > 0.0 and h2_utilization < 1.0
     h2_total = species.create_h2_species()
-    h2_total.moles = h2_consumed_moles / h2_utilisation
+    h2_total.moles = h2_consumed_moles / h2_utilization
 
     h2_excess = species.create_h2_species()
     h2_excess.moles = h2_total.moles - h2_consumed_moles

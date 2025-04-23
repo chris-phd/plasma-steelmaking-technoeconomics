@@ -68,7 +68,7 @@ def create_plasma_system(system_name: str = 'plasma steelmaking',
     plasma_system.system_vars['plasma temp K'] = 2750
     plasma_system.system_vars['argon molar percent in h2 plasma'] = 0.0
     plasma_system.system_vars['plasma reduction percent'] = 95.0
-    plasma_system.system_vars['plasma h2 utilisation'] = 0.43
+    plasma_system.system_vars['plasma h2 utilization'] = 0.43
     plasma_system.system_vars['o2 injection kg'] = 0.0
     plasma_system.system_vars['plasma torch electro-thermal eff percent'] = 80.0  # MacRae1992
     plasma_system.system_vars['plasma reactor thermal eff percent'] = 85.0  # assumption
@@ -226,7 +226,8 @@ def create_dri_eaf_system(system_name='dri eaf steelmaking',
     dri_eaf_system.system_vars['ore heater temp K'] = celsius_to_kelvin(550)
     dri_eaf_system.system_vars['h2 heater temp K'] = celsius_to_kelvin(750)
     dri_eaf_system.system_vars['ironmaking device names'] = [fluidized_bed_1.name, fluidized_bed_2.name]
-    dri_eaf_system.system_vars['fluidized beds h2 excess ratio'] = 3.84
+    final_reduction_degree = dri_eaf_system.system_vars['fluidized beds reduction percent'] * 0.01
+    dri_eaf_system.system_vars['fluidized beds h2 utilization'] = h2_utilization_of_fe2o3_red_at_650C(final_reduction_degree)
     dri_eaf_system.system_vars['o2 injection kg'] = 10.0
     dri_eaf_system.system_vars['electrolysis lhv efficiency percent'] = 70.0
     dri_eaf_system.system_vars['hydrogen loops'] = [dri_eaf_system.system_vars['ironmaking device names']]
@@ -398,7 +399,7 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     hybrid_system.system_vars['plasma reactor thermal eff percent'] = 85.0  # assumption
     hybrid_system.system_vars['steel exit temp K'] = celsius_to_kelvin(1600)
     hybrid_system.system_vars['o2 injection kg'] = 0.0
-    hybrid_system.system_vars['plasma h2 utilisation'] = 0.43
+    hybrid_system.system_vars['plasma h2 utilization'] = 0.43
     hybrid_system.system_vars['steelmaking bath temp K'] = hybrid_system.system_vars['steel exit temp K']
     hybrid_system.system_vars['b2 basicity'] = 2.0
     hybrid_system.system_vars['b4 basicity'] = 1.8  # 2.1
@@ -410,7 +411,7 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     hybrid_system.system_vars['h2 heater temp K'] = celsius_to_kelvin(750)
     hybrid_system.system_vars['plasma ore heater temp K'] = celsius_to_kelvin(800)
     hybrid_system.system_vars['ironmaking device names'] = ironmaking_device_names
-    hybrid_system.system_vars['fluidized beds h2 excess ratio'] = 3.84
+    hybrid_system.system_vars['fluidized beds h2 utilization'] = h2_utilization_of_fe2o3_red_at_650C(prereduction_perc * 0.01)
     hybrid_system.system_vars['electrolysis lhv efficiency percent'] = 70.0
     hybrid_system.system_vars['hydrogen loops'] = [ironmaking_device_names, [plasma_smelter.name]]
     hybrid_system.system_vars['h2 consuming device names'] = ironmaking_device_names + [plasma_smelter.name]
@@ -595,6 +596,41 @@ def add_h2_plasma_composition(system: System):
         raise Exception("Could not add plasma composition. Expect H2 and H fractions do not sum to 1.")
     system.system_vars['plasma h2 fraction (excl. Ar and H2O)'] = h2_fraction
     system.system_vars['plasma h fraction (excl. Ar and H2O)'] = h_fraction
+
+
+def h2_utilization_of_fe2o3_red_at_650C(final_reduction_degree = 0.95):
+    assert 0 <= final_reduction_degree <= 1.0
+    
+    h2_utilization = 0.0
+
+    smooth_curve = False
+    if smooth_curve:
+        # h2 utilization for different final reduction degrees, based on factsage analysis,
+        # and fitted to a line of best fit between 0.10 and 0.7. 
+        # h2_utilization = 0.22680720182217 rd^-0.471753183517625
+        # Non line of best fit of piecemeal version in the false branch of this if statement. 
+        if 0.0 <= final_reduction_degree < 0.04306:
+            h2_utilization = 1.0
+        elif 0.6866 < final_reduction_degree <= 1.0:
+            h2_utilization = 0.2865
+        else:
+            h2_utilization = 0.22680720182217 * final_reduction_degree**(-0.471753183517625)
+    else:
+        # h2 utilization for different final reduction degrees, based on factsage analysis,
+        if 0.0 <= final_reduction_degree < 0.11:
+            h2_utilization = 1.0
+        elif 0.11 <= final_reduction_degree < 0.1111:
+            h2_utilization = 0.6667
+        elif 0.1111 <= final_reduction_degree < 0.33:
+            h2_utilization = 0.4105
+        elif 0.33 <= final_reduction_degree < 0.3333:
+            h2_utilization = 0.3333
+        elif 0.3333 <= final_reduction_degree <= 1.0:
+            h2_utilization = 0.2865
+        else:
+            assert(f"Unsupported final reduction degree {final_reduction_degree}")
+
+    return h2_utilization
 
 
 if __name__ == "__main__":

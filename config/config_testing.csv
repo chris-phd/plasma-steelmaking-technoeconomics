@@ -13,5 +13,5 @@ all,slag mgo weight perc,7.0,number
 plasma,plasma h2 excess ratio,2.3,number
 plasma bof,plasma h2 excess ratio,2.3,number
 hybrid 33,plasma h2 excess ratio,2.3,number
-dri-eaf,fluidized beds h2 excess ratio,3.84,number
-hybrid 33,fluidized beds h2 excess ratio,3.84,number
+dri-eaf,fluidized beds h2 utilization,0.265,number
+hybrid 33,fluidized beds h2 utilization,0.333,number
