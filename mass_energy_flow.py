@@ -62,17 +62,6 @@ def main():
     plasma_ar_h2_system.system_vars['argon molar percent in h2 plasma'] = 10.0
     hybrid33_ar_h2_system.system_vars['argon molar percent in h2 plasma'] = 10.0
 
-    # For systems where hydrogen is the carrier of thermal energy as well as the reducing
-    # agent, you excess h2 ratio may need to be adjusted to ensure there is enough thermal
-    # energy to melt the steel and maintain the heat balance. Values listed here is only the initial guess.
-    plasma_system.system_vars['plasma h2 excess ratio'] = 2.5  # 1.75 too low, anticipate 40-50% utilisation
-    plasma_ar_h2_system.system_vars['plasma h2 excess ratio'] = 1.0
-    plasma_bof_system.system_vars['plasma h2 excess ratio'] = 2.5  # 1.75 too low, as above
-    hybrid33_system.system_vars['plasma h2 excess ratio'] = 4.0
-    hybrid33_ar_h2_system.system_vars['plasma h2 excess ratio'] = 3.5
-    hybrid55_system.system_vars['plasma h2 excess ratio'] = 5.5
-    hybrid95_system.system_vars['plasma h2 excess ratio'] = 30.0
-
     ## Calculate The Mass and Energy Flow
     solve_mass_energy_flow(plasma_system, add_plasma_mass_and_energy)
     solve_mass_energy_flow(plasma_ar_h2_system, add_plasma_mass_and_energy)
@@ -140,10 +129,10 @@ def solve_mass_energy_flow(system: System, mass_and_energy_func: Callable, print
             mass_and_energy_func(system_solved, print_debug_messages)
             converged = True
         except IncreaseExcessHydrogenPlasma:
-            system_vars_solved['plasma h2 excess ratio'] *= 1.01
+            system_vars_solved['plasma h2 utilisation'] *= 0.99
             if print_debug_messages:
                 print(
-                    f"System {system.name} did not converge. Increasing plasma excess h2 ratio to {system_vars_solved['plasma h2 excess ratio']}")
+                    f"System {system.name} did not converge. Decreasing plasma h2 utilisation to {system_vars_solved['plasma h2 utilisation']}")
         except IncreaseExcessHydrogenFluidizedBeds:
             system_vars_solved['fluidized beds h2 excess ratio'] *= 1.01
             if print_debug_messages:
@@ -1260,7 +1249,7 @@ def add_plasma_flows_final(system: System):
     # remaining in iron oxide, compared to the mass of oxygen in the hematite at the very start of the process.
     reduction_degree = system.system_vars['plasma reduction percent'] * 0.01
     plasma_temp = system.system_vars['plasma temp K']
-    excess_h2_ratio = system.system_vars['plasma h2 excess ratio']
+    h2_utilisation = system.system_vars['plasma h2 utilisation']
     steelmaking_device_name = system.system_vars['steelmaking device name']
     plasma_smelter = system.devices[steelmaking_device_name]
     plasma_torch = system.devices['plasma torch']
@@ -1321,12 +1310,9 @@ def add_plasma_flows_final(system: System):
     h2o.moles = num_fe_formations + num_feo_formations + num_fe3o4_formations + 2 * num_si_formations
     h2_consumed_moles = h2o.moles
 
-    # stoichiometric amount for entire reduction. h2 moles used in fluidised bed prereduction included.
-    # needed to garantee the correct gas oxidation degree is achieved.
-    stoichiometric_h2_moles = fe_target.moles * 1.5 + 0.5 * feo_target.moles 
+    assert h2_utilisation > 0.0 and h2_utilisation < 1.0
     h2_total = species.create_h2_species()
-    assert excess_h2_ratio >= 1
-    h2_total.moles = stoichiometric_h2_moles * excess_h2_ratio
+    h2_total.moles = h2_consumed_moles / h2_utilisation
 
     h2_excess = species.create_h2_species()
     h2_excess.moles = h2_total.moles - h2_consumed_moles
