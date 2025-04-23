@@ -8,6 +8,7 @@ import os
 import tempfile
 from typing import List, Dict, Any, Optional
 import matplotlib.pyplot as plt
+import numpy as np
 import shutil
 
 from create_plants import create_dri_eaf_system, create_hybrid_system, create_plasma_system
@@ -128,10 +129,19 @@ def create_systems(config: Dict[str, Dict[str, Any]]) -> List[System]:
     hybrid33_system.add_mass_energy_flow_func = add_hybrid_mass_and_energy
     hybrid55_system.add_mass_energy_flow_func = add_hybrid_mass_and_energy
 
-    systems = [dri_eaf_system,
-               plasma_system,
-               plasma_bof_system,
-               hybrid33_system]
+    run_prereduction_sensitivity = True
+    if run_prereduction_sensitivity:
+        systems = []
+        for rd in np.linspace(30, 40, 21): # np.linspace(5, 90, 18): #
+            on_prem_h2, h2_storage, annual_steel, lifetime = get_important_config_entries("Hybrid 33", config)
+            hybrid33_system = create_hybrid_system(f"{rd}", on_prem_h2, h2_storage, rd, annual_steel, lifetime)
+            hybrid33_system.add_mass_energy_flow_func = add_hybrid_mass_and_energy
+            systems.append(hybrid33_system)
+    else:
+        systems = [dri_eaf_system,
+                   plasma_system,
+                   plasma_bof_system,
+                   hybrid33_system]
 
     # Overwrite system vars here to modify behaviour
     default_config = config.get("all", {})

@@ -68,7 +68,7 @@ def create_plasma_system(system_name: str = 'plasma steelmaking',
     plasma_system.system_vars['plasma temp K'] = 2750
     plasma_system.system_vars['argon molar percent in h2 plasma'] = 0.0
     plasma_system.system_vars['plasma reduction percent'] = 95.0
-    plasma_system.system_vars['plasma h2 utilization'] = 0.43
+    plasma_system.system_vars['plasma h2 utilization'] = 0.40
     plasma_system.system_vars['o2 injection kg'] = 0.0
     plasma_system.system_vars['plasma torch electro-thermal eff percent'] = 80.0  # MacRae1992
     plasma_system.system_vars['plasma reactor thermal eff percent'] = 85.0  # assumption
@@ -399,7 +399,7 @@ def create_hybrid_system(system_name='hybrid steelmaking',
     hybrid_system.system_vars['plasma reactor thermal eff percent'] = 85.0  # assumption
     hybrid_system.system_vars['steel exit temp K'] = celsius_to_kelvin(1600)
     hybrid_system.system_vars['o2 injection kg'] = 0.0
-    hybrid_system.system_vars['plasma h2 utilization'] = 0.43
+    hybrid_system.system_vars['plasma h2 utilization'] = 0.40
     hybrid_system.system_vars['steelmaking bath temp K'] = hybrid_system.system_vars['steel exit temp K']
     hybrid_system.system_vars['b2 basicity'] = 2.0
     hybrid_system.system_vars['b4 basicity'] = 1.8  # 2.1
@@ -600,8 +600,6 @@ def add_h2_plasma_composition(system: System):
 
 def h2_utilization_of_fe2o3_red_at_650C(final_reduction_degree = 0.95):
     assert 0 <= final_reduction_degree <= 1.0
-    
-    h2_utilization = 0.0
 
     smooth_curve = False
     if smooth_curve:
@@ -619,13 +617,13 @@ def h2_utilization_of_fe2o3_red_at_650C(final_reduction_degree = 0.95):
         # h2 utilization for different final reduction degrees, based on factsage analysis,
         if 0.0 <= final_reduction_degree < 0.11:
             h2_utilization = 1.0
-        elif 0.11 <= final_reduction_degree < 0.1111:
+        elif 0.11 <= final_reduction_degree < 0.111111:
             h2_utilization = 0.6667
-        elif 0.1111 <= final_reduction_degree < 0.33:
+        elif 0.111111 <= final_reduction_degree < 0.33:
             h2_utilization = 0.4105
-        elif 0.33 <= final_reduction_degree < 0.3333:
+        elif 0.33 <= final_reduction_degree < 0.333333:
             h2_utilization = 0.3333
-        elif 0.3333 <= final_reduction_degree <= 1.0:
+        elif 0.333333 <= final_reduction_degree <= 1.0:
             h2_utilization = 0.2865
         else:
             assert(f"Unsupported final reduction degree {final_reduction_degree}")
