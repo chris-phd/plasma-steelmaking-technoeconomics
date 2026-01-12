@@ -43,7 +43,7 @@ Graphviz is required to use the -r command line option to render a diagram of th
 Install graphviz and add it to the environment PATH.
 ```
 sudo apt update
-sudo apt install graphiz
+sudo apt install graphviz
 ```
 
 ## Running the Code
