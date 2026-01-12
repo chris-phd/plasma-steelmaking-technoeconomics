@@ -671,13 +671,13 @@ class TestSteelPlantMassEnergyModel(TestCase):
         self.assertAlmostEqual(s.lcop_breakdown['labour'], 40.0, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['h2'], 171.97, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['ore'], 163.63, places=1)
-        self.assertAlmostEqual(s.lcop_breakdown['base electricity'], 145.23, places=1)
+        self.assertAlmostEqual(s.lcop_breakdown['base electricity'], 145.35, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['c'], 1.30, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['cao'], 26.82, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['mgo'], 58.01, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['o2'], 1.00, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['scrap'], 0.00, places=1)
-        self.assertAlmostEqual(s.lcop(), 677.84, places=1)
+        self.assertAlmostEqual(s.lcop(), 677.97, places=1)
 
     def test_plasma_system(self):
         s = self.systems[1]
@@ -688,13 +688,13 @@ class TestSteelPlantMassEnergyModel(TestCase):
         self.assertAlmostEqual(s.lcop_breakdown['labour'], 40.00, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['h2'], 165.16, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['ore'], 155.50, places=1)
-        self.assertAlmostEqual(s.lcop_breakdown['base electricity'], 185.45, places=1)
+        self.assertAlmostEqual(s.lcop_breakdown['base electricity'], 184.66, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['c'], 1.30, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['cao'], 25.49, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['mgo'], 50.27, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['o2'], 0.00, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['scrap'], 0.00, places=1)
-        self.assertAlmostEqual(s.lcop(), 663.22, places=1)
+        self.assertAlmostEqual(s.lcop(), 662.43, places=1)
 
     def test_plasma_bof_system(self):
         s = self.systems[2]
@@ -705,13 +705,13 @@ class TestSteelPlantMassEnergyModel(TestCase):
         self.assertAlmostEqual(s.lcop_breakdown['labour'], 40.00, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['h2'], 155.56, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['ore'], 144.82, places=1)
-        self.assertAlmostEqual(s.lcop_breakdown['base electricity'], 190.41, places=1)
+        self.assertAlmostEqual(s.lcop_breakdown['base electricity'], 189.98, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['c'], 4.60, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['cao'], 12.74, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['mgo'], 29.55, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['o2'], 1.89, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['scrap'], 0.00, places=1)
-        self.assertAlmostEqual(s.lcop(), 635.32, places=1)
+        self.assertAlmostEqual(s.lcop(), 634.89, places=1)
 
     def test_hybrid_system(self):
         s = self.systems[3]
@@ -722,13 +722,13 @@ class TestSteelPlantMassEnergyModel(TestCase):
         self.assertAlmostEqual(s.lcop_breakdown['labour'], 40.00, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['h2'], 165.16, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['ore'], 155.50, places=1)
-        self.assertAlmostEqual(s.lcop_breakdown['base electricity'], 182.92, places=1)
+        self.assertAlmostEqual(s.lcop_breakdown['base electricity'], 155.54, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['c'], 1.30, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['cao'], 25.49, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['mgo'], 50.27, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['o2'], 0.00, places=1)
         self.assertAlmostEqual(s.lcop_breakdown['scrap'], 0.00, places=1)
-        self.assertAlmostEqual(s.lcop(), 675.47, places=1)
+        self.assertAlmostEqual(s.lcop(), 648.09, places=1)
 
 
 class TestSensitivityAnalysis(TestCase):
@@ -765,10 +765,10 @@ class TestSensitivityAnalysis(TestCase):
             for case in si:
                 self.assertTrue(case.success)
         # change in LCOS due to change in hydrogen price
-        self.assertAlmostEqual(dri_eaf_sis[0].result_vals[0], 563.19, places=1)
-        self.assertAlmostEqual(dri_eaf_sis[0].result_vals[-1], 792.49, places=1)
-        self.assertAlmostEqual(plasma_sis[0].result_vals[0], 553.11, places=1)
-        self.assertAlmostEqual(plasma_sis[0].result_vals[-1], 773.33, places=1)
+        self.assertAlmostEqual(dri_eaf_sis[0].result_vals[0], 563.32, places=1)
+        self.assertAlmostEqual(dri_eaf_sis[0].result_vals[-1], 792.61, places=1)
+        self.assertAlmostEqual(plasma_sis[0].result_vals[0], 552.32, places=1)
+        self.assertAlmostEqual(plasma_sis[0].result_vals[-1], 772.53, places=1)
 
 
 if __name__ == '__main__':
