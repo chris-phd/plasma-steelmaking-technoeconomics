@@ -131,7 +131,7 @@ def report_sensitivity_analysis_for_system(output_dir: str, system: System,
                     except TypeError:
                         # expect this path to run when the params are non numerics. E.g. bools or strings
                         perc_change_from_base = param
-                    file.write(f"{si.parameter_name},{si.indicator_name}_{i},{param:.2f},{perc_change_from_base:.2f},\
+                    file.write(f"{si.parameter_name},{si.indicator_name}_{i},{param:.4f},{perc_change_from_base:.2f},\
                                 {result:.2f}\n")
                     i += 1
 

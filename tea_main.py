@@ -129,10 +129,10 @@ def create_systems(config: Dict[str, Dict[str, Any]]) -> List[System]:
     hybrid33_system.add_mass_energy_flow_func = add_hybrid_mass_and_energy
     hybrid55_system.add_mass_energy_flow_func = add_hybrid_mass_and_energy
 
-    run_prereduction_sensitivity = True
+    run_prereduction_sensitivity = False
     if run_prereduction_sensitivity:
         systems = []
-        for rd in np.linspace(30, 40, 21): # np.linspace(5, 90, 18): #
+        for rd in np.linspace(5.0, 90.0, 18):
             on_prem_h2, h2_storage, annual_steel, lifetime = get_important_config_entries("Hybrid 33", config)
             hybrid33_system = create_hybrid_system(f"{rd}", on_prem_h2, h2_storage, rd, annual_steel, lifetime)
             hybrid33_system.add_mass_energy_flow_func = add_hybrid_mass_and_energy

@@ -1,2 +1,2 @@
 system name,parameter name,parameter type,X max, X min,num increments,elasticity perc
-Plasma BOF,plasma reactor thermal eff percent,SystemVar,90.0,70.0,41,5
+All,Base Electricity,Price,100.00,40.00,61,3
